@@ -69,6 +69,11 @@ Option Explicit
 
 Public Silenced As Boolean
 
+Private Declare Function ShowWindow Lib "user32" (ByVal hWnd As Long, ByVal nCmdShow As Long) As Long
+Private Declare Function SetWindowLong Lib "user32" Alias "SetWindowLongA" (ByVal hWnd As Long, ByVal nIndex As Long, ByVal dwNewLong As Long) As Long
+Private Const SW_SHOWNOACTIVATE As Long = 4
+Private Const GWL_HWNDPARENT As Long = -8
+
 Private Sub Form_Load()
     ClassicLook Me
     picCal.Cls
@@ -84,7 +89,10 @@ Public Sub Pop(ByVal sSay As String)
     cmdHelp.Visible = True
     cmdNoHelp.Caption = "&Just draw the box without help"
     Move frmMain.Left + frmMain.Width - Width - 480, frmMain.Top + frmMain.Height - Height - 900
-    Show vbModeless, frmMain
+    ' Owned by the main window so it stays on top of it, but shown without
+    ' taking the focus: you can keep typing while Cal watches.
+    SetWindowLong hWnd, GWL_HWNDPARENT, frmMain.hWnd
+    ShowWindow hWnd, SW_SHOWNOACTIVATE
 End Sub
 
 Private Sub cmdHelp_Click()
