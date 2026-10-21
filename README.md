@@ -4,8 +4,25 @@ A parametric CAD program written the way it would have been written in 1999:
 in Visual Basic, with an MDI window, a `TreeView`, a `ListView` in Report mode
 and a wireframe viewport drawn with `Line`, one edge at a time.
 
-It's a joke, but it works. You can sketch, extrude, revolve, drill a hole,
-orbit the part, and save it to a file nobody else can read.
+It's a joke, but it works. You can sketch, extrude, revolve, drill holes,
+put features on top of other features, change any of them later, and save
+the part to a file nobody else can read.
+
+## Getting it
+
+Download `SolidCraft98-1.0.zip` from the Releases page, unzip it anywhere,
+and run `SolidCraft98.exe`. There's no installer and nothing to register:
+one EXE, which is very un-1999 of it. It runs on Windows 10 and 11 and on
+ReactOS. The EXE isn't signed, so Windows may say it "protected your PC":
+choose More info, then Run anyway.
+
+## What it can't do yet
+
+- Export. Parts only save as `.sc98`, which nothing else reads.
+- Shading. It's wireframe, one `Line` at a time.
+- Sketches are rectangles and circles, flat, facing up. Revolve turns them
+  about the Y axis. Holes go straight down from a top face.
+- No booleans: a boss on a plate is two bodies that touch.
 
 ## What's in it
 
@@ -16,15 +33,55 @@ orbit the part, and save it to a file nobody else can read.
 - A feature tree on the left and a timeline along the bottom.
 - A wireframe viewport. It starts isometric. Drag with the left button to
   orbit and the right button to pan; `+` and `-` zoom.
-- Commands: Sketch Rectangle, Sketch Circle, Extrude, Revolve, and Hole (on
-  the top face of a box). Plus Undo, Zoom to Fit and Regenerate.
+- Commands: Sketch Rectangle (with rounded corners), Sketch Circle,
+  Extrude, Revolve, and Hole. Plus Undo, Zoom to Fit and Regenerate.
+- It's parametric. Double-click any feature to change its numbers, and
+  whatever is built on it follows. Del deletes a feature (and, after
+  asking, anything built on it).
+- Sketches sit on the ground or on top of an extrude, and move with it.
+- Holes go into the top of any extrude. "Through all" goes through
+  everything stacked underneath.
 - Save and Open use `Put` and `Get` on a single `Type`. Open a file from a
-  newer version and you're told so. Open one from an older version and
-  you're also told so.
+  newer version and you're told so. Files from version 3 are converted.
 - Number boxes go through `CDbl` with no validation, so typing `20mm` gets you
   a genuine `Run-time error '13': Type mismatch`. It's caught and shown, not
   a crash.
 - An About box and a splash screen, both drawn in code.
+
+## Design your first part
+
+A mounting plate: 80 x 50 x 6 mm with rounded corners, a hole in each corner,
+and a boss in the middle with a bore through it and the plate. About five
+minutes. (It's in `samples/Mounting Plate.sc98` if you'd rather look.)
+
+1. **The plate outline.** Press R (Sketch, Rectangle). Width 80, Height 50,
+   Corner X -40, Corner Y -25, Corner radius 6. Leave "On top of feature #"
+   at 0, which means the ground. OK.
+2. **The plate.** Press E (Extrude). Depth 6. OK.
+3. **Corner holes.** Press H (Hole). Diameter 5, Depth 0 (all the way
+   through), Centre X -32, Centre Y -17. OK. Do it three more times at
+   (32, -17), (32, 17) and (-32, 17).
+4. **The boss outline.** Press C (Sketch, Circle). Radius 10, Centre 0, 0.
+   "On top of feature #": 2, which is the plate's number in the # column
+   of the timeline. Height above that: 0. OK.
+5. **The boss.** Press E. Depth 15. OK.
+6. **The bore.** Press H. Diameter 10, Depth 0, Centre 0, 0. It goes on
+   the boss, the last extrude, and because it's "through all" it carries on
+   through the plate as well. OK.
+7. **Change your mind.** Double-click Extrude1 in the timeline and make it
+   8 mm. The boss moves up with the plate, and the bore still goes all the
+   way through.
+8. **Save.** Ctrl+S.
+
+Tips:
+
+- Drag in the view with the left button to orbit, the right button to pan.
+  I puts it back to isometric; F fits it to the window.
+- A hole goes on the extrude you've selected in the tree or the timeline,
+  or on the last one if nothing is selected. A new sketch sits on the
+  selected extrude too.
+- Number boxes do arithmetic: 80/2, 25+3.5. They don't do units, and
+  they'll tell you so.
 
 ## The Turbo button
 
@@ -73,6 +130,9 @@ the clock or a disk drive, and no design is ever lost.
 | R, C | Sketch rectangle, sketch circle |
 | E, V, H | Extrude, Revolve, Hole |
 | I, F | Isometric view, Zoom to fit |
+| Enter, or double-click | Edit the selected feature |
+| Del | Delete the selected feature |
+| + / - | Zoom in and out |
 | F5 | Regenerate |
 | F1 | Help (it isn't installed) |
 

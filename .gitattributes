@@ -2,3 +2,4 @@
 *.bas text eol=crlf
 *.cls text eol=crlf
 *.vbp text eol=crlf
+*.sc98 binary
