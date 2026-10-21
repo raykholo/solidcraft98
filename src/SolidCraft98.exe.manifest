@@ -4,7 +4,7 @@
       type="win32"
       processorArchitecture="*"
       name="SolidCraft.SolidCraft98"
-      version="1.0.98.0"
+      version="1.0.1.0"
    />
    <description>SolidCraft 98</description>
    <dependency>
