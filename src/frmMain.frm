@@ -84,17 +84,22 @@ Begin VB.MDIForm frmMain
          Tag             =   "Publish"
       End
       Begin VB.Menu mnuFileItem
-         Caption         =   "&Close"
+         Caption         =   "Export for &Rapid Prototyping (*.stl)..."
          Index           =   6
+         Tag             =   "ExportStl"
+      End
+      Begin VB.Menu mnuFileItem
+         Caption         =   "&Close"
+         Index           =   7
          Tag             =   "Close"
       End
       Begin VB.Menu mnuFileItem
          Caption         =   "-"
-         Index           =   7
+         Index           =   8
       End
       Begin VB.Menu mnuFileItem
          Caption         =   "E&xit"
-         Index           =   8
+         Index           =   9
          Tag             =   "Exit"
       End
    End

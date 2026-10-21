@@ -15,6 +15,7 @@ Public Sub RunCommand(ByVal sCmd As String)
     Case "Close": CmdClose
     Case "SaveFloppy": CmdFloppy
     Case "Publish": CmdPublish
+    Case "ExportStl": CmdExportStl
     Case "Exit": Unload frmMain
 
     Case "SketchRect": CmdSketchRect
@@ -210,6 +211,12 @@ Private Sub CmdPublish()
     Dim p As frmPart
     If Not NeedPart(p) Then Exit Sub
     PublishPart p
+End Sub
+
+Private Sub CmdExportStl()
+    Dim p As frmPart
+    If Not NeedPart(p) Then Exit Sub
+    ExportStl p
 End Sub
 
 Private Sub CmdClose()
