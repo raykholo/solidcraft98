@@ -6,6 +6,7 @@ Begin VB.Form frmAbout
    ClientLeft      =   45
    ClientTop       =   330
    ClientWidth     =   5760
+   KeyPreview      =   -1  'True
    LinkTopic       =   "Form1"
    MaxButton       =   0   'False
    MinButton       =   0   'False
@@ -107,6 +108,8 @@ Private Type MEMORYSTATUSEX
     ullAvailExtendedVirtualHi As Long
 End Type
 
+Private mTyped As String
+
 Private Declare Function GlobalMemoryStatusEx Lib "kernel32" (lpBuffer As MEMORYSTATUSEX) As Long
 
 Private Sub Form_Load()
@@ -138,4 +141,18 @@ End Function
 
 Private Sub cmdOK_Click()
     Unload Me
+End Sub
+
+' Turbo on, Shift-click the logo: a setup program "updates" MSCOMCTL.OCX.
+Private Sub picLogo_MouseDown(Button As Integer, Shift As Integer, X As Single, Y As Single)
+    If (Shift And vbShiftMask) <> 0 And Turbo Then frmSetup.Show vbModal, Me
+End Sub
+
+' Type WIN98 in here for the credits.
+Private Sub Form_KeyPress(KeyAscii As Integer)
+    mTyped = Right$(mTyped & UCase$(Chr$(KeyAscii)), 5)
+    If mTyped = "WIN98" Then
+        mTyped = ""
+        frmCredits.Show vbModal, Me
+    End If
 End Sub

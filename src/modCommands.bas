@@ -13,6 +13,8 @@ Public Sub RunCommand(ByVal sCmd As String)
     Case "Save": CmdSave False
     Case "SaveAs": CmdSave True
     Case "Close": CmdClose
+    Case "SaveFloppy": CmdFloppy
+    Case "Publish": CmdPublish
     Case "Exit": Unload frmMain
 
     Case "SketchRect": CmdSketchRect
@@ -25,6 +27,8 @@ Public Sub RunCommand(ByVal sCmd As String)
     Case "Orbit", "ViewIso": WithPart "ViewIso"
     Case "ZoomFit": WithPart "ZoomFit"
     Case "Regen": WithPart "Regen"
+
+    Case "Turbo": SetTurbo Not Turbo
 
     Case "Cascade": frmMain.Arrange vbCascade
     Case "TileH": frmMain.Arrange vbTileHorizontal
@@ -113,6 +117,10 @@ Private Sub CmdSave(ByVal bAs As Boolean)
         sPath = frmMain.AskFileName(True, RTrim$(Docs(slot).Title))
         If Len(sPath) = 0 Then Exit Sub
     End If
+    If UCase$(Left$(sPath, 3)) = "A:\" Then
+        FloppySave p, Mid$(sPath, 4)
+        Exit Sub
+    End If
     If SaveDesign(Docs(slot), sPath) Then
         DocPath(slot) = sPath
         Docs(slot).Title = FileTitle(sPath)
@@ -120,6 +128,61 @@ Private Sub CmdSave(ByVal bAs As Boolean)
         p.RefreshAll False
         Status "Saved " & sPath & " (" & FileLen(sPath) & " bytes)"
     End If
+End Sub
+
+Private Sub CmdFloppy()
+    Dim p As frmPart
+    If Not NeedPart(p) Then Exit Sub
+    FloppySave p, RTrim$(Docs(p.DocIndex).Title) & "." & PART_EXT
+End Sub
+
+' Saving to drive A:. There isn't one, so the part goes to the hard disk
+' first, and with Turbo on we put on a show of floppies for it.
+Private Sub FloppySave(p As frmPart, ByVal sName As String)
+    Dim slot As Integer, sReal As String, nBytes As Double
+    Const PREVIEW_BYTES As Double = 3686454   ' a 1280 x 960 24-bit BMP, "for faster opening"
+    slot = p.DocIndex
+    If Not Turbo Then
+        MsgBox "There is no drive A: on this PC." & vbCrLf & vbCrLf & _
+            "Use File, Save As to save the part to the hard disk.", vbExclamation, App.Title
+        Exit Sub
+    End If
+    sReal = DocPath(slot)
+    If Len(sReal) = 0 Then sReal = SafeDocumentsPath(sName)
+    If Not SaveDesign(Docs(slot), sReal) Then Exit Sub
+    DocPath(slot) = sReal
+    Docs(slot).Title = FileTitle(sReal)
+    DocDirty(slot) = False
+    p.RefreshAll False
+    nBytes = FileLen(sReal) + PREVIEW_BYTES
+    If frmFloppy.Run(FileTitle(sReal) & "." & PART_EXT, nBytes) Then
+        MsgBox "Copied " & Format$(nBytes, "#,##0") & " bytes to " & (-Int(-nBytes / FLOPPY_BYTES)) & " disks." & vbCrLf & vbCrLf & _
+            "Turbo saves include an uncompressed preview bitmap, for speed." & vbCrLf & _
+            "(This PC has no drive A:, so the part itself is safe in" & vbCrLf & sReal & ")", vbInformation, App.Title
+    Else
+        MsgBox "Copy cancelled. The part is safe in" & vbCrLf & sReal, vbInformation, App.Title
+    End If
+    Status "Saved " & sReal
+End Sub
+
+' My Documents\<name>, with (2), (3)... if that's taken.
+Private Function SafeDocumentsPath(ByVal sName As String) As String
+    Dim sDir As String, sBase As String, n As Integer
+    sDir = Environ$("USERPROFILE") & "\Documents\"
+    If Len(Dir$(sDir, vbDirectory)) = 0 Then sDir = App.Path & "\"
+    sBase = FileTitle(sName)
+    SafeDocumentsPath = sDir & sBase & "." & PART_EXT
+    n = 1
+    Do While Len(Dir$(SafeDocumentsPath)) > 0
+        n = n + 1
+        SafeDocumentsPath = sDir & sBase & " (" & n & ")." & PART_EXT
+    Loop
+End Function
+
+Private Sub CmdPublish()
+    Dim p As frmPart
+    If Not NeedPart(p) Then Exit Sub
+    PublishPart p
 End Sub
 
 Private Sub CmdClose()
@@ -142,6 +205,7 @@ Private Function Commit(p As frmPart, f As TFeature) As Boolean
     p.RefreshAll True
     Status FeatureName(Docs(p.DocIndex), i) & " created: " & Describe(Docs(p.DocIndex), i)
     Commit = True
+    If f.Kind = FK_SKETCH_RECT Then frmCal.Pop "It looks like you're drawing a box."
 End Function
 
 Private Sub CmdSketchRect()

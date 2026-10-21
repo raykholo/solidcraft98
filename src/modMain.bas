@@ -3,6 +3,7 @@ Attribute VB_Name = "modMain"
 Option Explicit
 
 Sub Main()
+    InitClock
     frmSplash.Show
     frmSplash.Paint
     frmSplash.Refresh

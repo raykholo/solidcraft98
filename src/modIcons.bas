@@ -22,6 +22,30 @@ Public Function IconKeys() As String
 End Function
 
 ' bTransparent skips the see-through pixels; otherwise they're painted ICON_MASK.
+' The same icon at s times the size, for Cal and friends.
+Public Sub PaintIconScaled(ByVal pic As PictureBox, ByVal sKey As String, ByVal x0 As Long, ByVal y0 As Long, ByVal s As Long)
+    Dim x As Long, y As Long, ch As String
+    LoadRows sKey
+    For y = 0 To 15
+        For x = 0 To 15
+            ch = Mid$(mRows(y), x + 1, 1)
+            If ch <> "." And ch <> "" Then
+                pic.Line (x0 + x * s, y0 + y * s)-(x0 + x * s + s - 1, y0 + y * s + s - 1), QBColor(CInt("&H" & ch)), BF
+            End If
+        Next x
+    Next y
+End Sub
+
+' Returns the icon's 16 rows, for code that wants the pixels (the GIF writer).
+Public Function IconRows(ByVal sKey As String) As String()
+    Dim r(0 To 15) As String, i As Integer
+    LoadRows sKey
+    For i = 0 To 15
+        r(i) = mRows(i)
+    Next i
+    IconRows = r
+End Function
+
 Public Sub PaintIcon(ByVal pic As PictureBox, ByVal sKey As String, ByVal x0 As Long, ByVal y0 As Long, _
                      Optional ByVal bTransparent As Boolean = False)
     Dim x As Long, y As Long, ch As String
@@ -261,6 +285,57 @@ Private Sub LoadRows(ByVal sKey As String)
         R "...11EEE1EE11..."
         R ".....11E111....."
         R ".......11......."
+        R "................"
+    Case "Cal"
+        R "................"
+        R ".88888888888888."
+        R ".8FFF7777FFF778."
+        R ".8F0F7777F0F778."
+        R ".8FFF7777FFF778."
+        R ".87777C77777778."
+        R ".88778888778888."
+        R "...878....878..."
+        R "...878....878..."
+        R "...878....878..."
+        R "...878....878..."
+        R "...878....878..."
+        R "....8......8...."
+        R "................"
+        R "................"
+        R "................"
+    Case "Construction"
+        R "................"
+        R ".......0........"
+        R ".......C0......."
+        R "......0E0......."
+        R "......0000......"
+        R ".....0EEE0......"
+        R ".....0EEEE0....."
+        R "....0000000....."
+        R "....0EEEEEE0...."
+        R "...0EEEEEEE0...."
+        R "...0000000000..."
+        R "..0EEEEEEEEE0..."
+        R "..0EEEEEEEEEE0.."
+        R ".0000000000000.."
+        R ".00000000000000."
+        R "................"
+    Case "Construction2"
+        R "................"
+        R ".......0........"
+        R ".......E0......."
+        R "......0E0......."
+        R "......0000......"
+        R ".....0EEE0......"
+        R ".....0EEEE0....."
+        R "....0000000....."
+        R "....0EEEEEE0...."
+        R "...0EEEEEEE0...."
+        R "...0000000000..."
+        R "..0EEEEEEEEE0..."
+        R "..0EEEEEEEEEE0.."
+        R ".0000000000000.."
+        R ".00000000000000."
         R "................"
     End Select
 End Sub

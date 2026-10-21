@@ -74,6 +74,9 @@ Private mDragging As Boolean
 Private mDragX As Single, mDragY As Single
 Private mDragButton As Integer
 Private mFrames As Long, mFrameStart As Single
+Private mLastDraw As Single
+Private mRegenTries As Integer
+Private mKonami As Integer
 
 Private Const GAP As Single = 60
 
@@ -193,7 +196,15 @@ Public Sub ZoomFit()
     Redraw
 End Sub
 
+Public Property Get ViewPicture() As PictureBox
+    Set ViewPicture = picView
+End Property
+
 Public Sub Regen()
+    If Not SolverConverges(mRegenTries) Then
+        frmMain.SetStatus "Regenerate: the solver did not converge (attempt " & mRegenTries & ")."
+        Exit Sub
+    End If
     RefreshAll False
     frmMain.SetStatus "Regenerated " & Docs(DocIndex).Count & " features, " & mEdgeCount & " edges."
 End Sub
@@ -236,6 +247,10 @@ End Sub
 ' Single-key shortcuts. Ctrl+N/O/S/Z and F1/F5 live on the menus.
 Private Sub Form_KeyDown(KeyCode As Integer, Shift As Integer)
     Dim sCmd As String
+    If KonamiKey(KeyCode) Then
+        KeyCode = 0
+        Exit Sub
+    End If
     If Shift <> 0 Then Exit Sub
     Select Case KeyCode
     Case vbKeyR: sCmd = "SketchRect"
@@ -252,6 +267,41 @@ Private Sub Form_KeyDown(KeyCode As Integer, Shift As Integer)
         KeyCode = 0
         RunCommand sCmd
     End If
+End Sub
+
+' Up, up, down, down, left, right, left, right, B, A. Returns True when it completes.
+Private Function KonamiKey(ByVal KeyCode As Integer) As Boolean
+    Dim seq As Variant
+    seq = Array(vbKeyUp, vbKeyUp, vbKeyDown, vbKeyDown, vbKeyLeft, vbKeyRight, vbKeyLeft, vbKeyRight, vbKeyB, vbKeyA)
+    If KeyCode = seq(mKonami) Then
+        mKonami = mKonami + 1
+        If mKonami > UBound(seq) Then
+            mKonami = 0
+            KonamiSpin
+            KonamiKey = True
+        End If
+    ElseIf KeyCode = seq(0) Then
+        mKonami = 1
+    Else
+        mKonami = 0
+    End If
+End Function
+
+' Three seconds of full-speed spin. The frame counter is decorative.
+Private Sub KonamiSpin()
+    Dim t As Single, y0 As Double
+    t = Timer
+    y0 = mView.Yaw
+    frmMain.SetFps "60 fps (lying)"
+    frmMain.SetStatus "Cheat activated. Full speed for three seconds."
+    Do While Timer - t < 3 And Timer >= t
+        mView.Yaw = y0 + (Timer - t) * 240
+        Redraw
+        DoEvents
+    Loop
+    mView.Yaw = y0
+    Redraw
+    frmMain.SetFps "60 fps (lying)"
 End Sub
 
 Private Sub ZoomBy(ByVal k As Double)
@@ -283,17 +333,26 @@ Private Sub picView_MouseMove(Button As Integer, Shift As Integer, X As Single, 
         mView.PanY = mView.PanY + (Y - mDragY)
     End If
     mDragX = X: mDragY = Y
+    ' Turbo caps orbit at 4 fps; the mouse keeps going, the picture catches up
+    If Timer - mLastDraw < OrbitFrameInterval() And Timer >= mLastDraw Then Exit Sub
+    mLastDraw = Timer
     Redraw
     mFrames = mFrames + 1
     el = Timer - mFrameStart
     If el > 0.5 Then
-        frmMain.SetFps Format$(mFrames / el, "0") & " fps"
+        If Turbo Then
+            frmMain.SetFps Format$(mFrames / el, "0") & " fps (Turbo)"
+            frmMain.SetStatus "Orbit is limited to 4 fps while Turbo is on."
+        Else
+            frmMain.SetFps Format$(mFrames / el, "0") & " fps"
+        End If
         mFrames = 0: mFrameStart = Timer
     End If
 End Sub
 
 Private Sub picView_MouseUp(Button As Integer, Shift As Integer, X As Single, Y As Single)
     mDragging = False
+    Redraw          ' the last position, in case Turbo skipped it
 End Sub
 
 Private Sub tvwTree_NodeClick(ByVal Node As MSComctlLib.Node)

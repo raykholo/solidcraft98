@@ -35,19 +35,23 @@ Private Const OFN_FILEMUSTEXIST As Long = &H1000
 
 Public Const PART_EXT As String = "sc98"
 
-Public Function FileDialog(ByVal hOwner As Long, ByVal bSave As Boolean, ByVal sDefault As String) As String
+' sFilter is "Description|*.ext", sExt the default extension. Both default to parts.
+Public Function FileDialog(ByVal hOwner As Long, ByVal bSave As Boolean, ByVal sDefault As String, _
+                           Optional ByVal sFilter As String = "", Optional ByVal sExt As String = "") As String
     Dim ofn As OPENFILENAME, r As Long, p As Long
+    If Len(sFilter) = 0 Then sFilter = "SolidCraft 98 Parts (*." & PART_EXT & ")|*." & PART_EXT
+    If Len(sExt) = 0 Then sExt = PART_EXT
     ofn.lStructSize = Len(ofn)
     ofn.hwndOwner = hOwner
-    ofn.lpstrFilter = "SolidCraft 98 Parts (*." & PART_EXT & ")" & vbNullChar & "*." & PART_EXT & vbNullChar & _
+    ofn.lpstrFilter = Replace(sFilter, "|", vbNullChar) & vbNullChar & _
                       "All Files (*.*)" & vbNullChar & "*.*" & vbNullChar & vbNullChar
     ofn.nFilterIndex = 1
     ofn.lpstrFile = sDefault & String$(260 - Len(sDefault), vbNullChar)
     ofn.nMaxFile = 260
-    ofn.lpstrDefExt = PART_EXT
+    ofn.lpstrDefExt = sExt
     ofn.Flags = OFN_HIDEREADONLY Or OFN_PATHMUSTEXIST
     If bSave Then
-        ofn.lpstrTitle = "Save Part As"
+        If sExt = PART_EXT Then ofn.lpstrTitle = "Save Part As" Else ofn.lpstrTitle = "Save As"
         ofn.Flags = ofn.Flags Or OFN_OVERWRITEPROMPT
         r = GetSaveFileName(ofn)
     Else

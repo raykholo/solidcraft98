@@ -26,6 +26,44 @@ orbit the part, and save it to a file nobody else can read.
   a crash.
 - An About box and a splash screen, both drawn in code.
 
+## The Turbo button
+
+Like the button on the front of a 1990s PC, except backwards. The LED next to
+it reads 66 MHz normally and 33 MHz with Turbo on, and Turbo switches on the
+authentic 1999 behaviour. With Turbo off, everything just works.
+
+With Turbo on:
+
+- **Regenerate** (F5) says "Did not converge. Try again." twice, then
+  succeeds on the third press. The solver uses a `Variant`.
+- **Orbit** is capped at 4 frames a second, and the status bar says so.
+- **"20mm" in a number box** escalates: Type mismatch, then Still a type
+  mismatch, then "It's a TextBox, not a mind reader", then a tip about
+  `Val()`. On the fifth try it gives up and takes 20.
+- **Dividing by zero** in a number box (they take arithmetic, so `40/0`)
+  gets a full-screen blue fatal exception. Press any key; the part is fine.
+  With Turbo off it's a plain run-time error 11.
+- **File > Send To 3 1/2 Floppy (A:)** saves the part to the hard disk, then
+  "copies" it to three floppies, asking for each disk. Turbo saves include an
+  uncompressed preview bitmap, for speed.
+- **Y2K**: on 31 December 1999 by the PC's clock, at midnight, every
+  dimension becomes 19100 mm. Start with `SolidCraft98.exe /Y2KTEST` to see
+  it a minute after launch without touching the clock.
+- **DLL Hell**: Help > About, Shift-click the logo. A setup program copies
+  MSCOMCTL.OCX over itself to 112% and asks you to restart Windows.
+
+Either way:
+
+- **Cal**, the caliper assistant, notices when you sketch a rectangle.
+- **Type WIN98** in the About box for the demo-scene credits.
+- **The Konami code** in the viewport (up up down down left right left right
+  B A) spins the part at full speed for three seconds: "60 fps (lying)".
+- **File > Publish to Web** writes a home page for the part: a marquee, a hit
+  counter, an animated "under construction" GIF and a picture of the part.
+
+Every one of these is only drawn on screen. Nothing touches system files,
+the clock or a disk drive, and no design is ever lost.
+
 ## Keys
 
 | Key | Command |
@@ -67,6 +105,10 @@ drawn at startup.
 | `modBars.bas` | The toolbar and status bar, drawn in PictureBoxes |
 | `modIcons.bas` | Toolbar icons as 16x16 text pixel art |
 | `modClassic.bas` | Keeps the classic look on modern Windows; coloured text |
+| `modTurbo.bas` | The Turbo button and the 1999 behaviour behind it |
+| `modExpr.bas` | Arithmetic in number boxes |
+| `modGif.bas`, `modPublish.bas` | GIF writer and Publish to Web |
+| `frmFloppy`, `frmFatal`, `frmSetup`, `frmCal`, `frmCredits` | The easter eggs |
 
 The toolbar and status bar are drawn by hand rather than taken from
 MSCOMCTL.OCX, because that OCX doesn't ship with current Windows. The

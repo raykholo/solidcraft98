@@ -13,6 +13,11 @@ Begin VB.MDIForm frmMain
       Left            =   120
       Top             =   1200
    End
+   Begin VB.Timer tmrClock
+      Interval        =   1000
+      Left            =   600
+      Top             =   1200
+   End
    Begin VB.PictureBox picToolbar
       Align           =   1  'Align Top
       AutoRedraw      =   -1  'True
@@ -69,17 +74,27 @@ Begin VB.MDIForm frmMain
          Tag             =   "SaveAs"
       End
       Begin VB.Menu mnuFileItem
-         Caption         =   "&Close"
+         Caption         =   "Sen&d To 3 1/2 Floppy (A:)..."
          Index           =   4
+         Tag             =   "SaveFloppy"
+      End
+      Begin VB.Menu mnuFileItem
+         Caption         =   "Publish to &Web..."
+         Index           =   5
+         Tag             =   "Publish"
+      End
+      Begin VB.Menu mnuFileItem
+         Caption         =   "&Close"
+         Index           =   6
          Tag             =   "Close"
       End
       Begin VB.Menu mnuFileItem
          Caption         =   "-"
-         Index           =   5
+         Index           =   7
       End
       Begin VB.Menu mnuFileItem
          Caption         =   "E&xit"
-         Index           =   6
+         Index           =   8
          Tag             =   "Exit"
       End
    End
@@ -140,6 +155,15 @@ Begin VB.MDIForm frmMain
          Index           =   2
          Shortcut        =   {F5}
          Tag             =   "Regen"
+      End
+      Begin VB.Menu mnuViewItem
+         Caption         =   "-"
+         Index           =   3
+      End
+      Begin VB.Menu mnuViewItem
+         Caption         =   "&Turbo"
+         Index           =   4
+         Tag             =   "Turbo"
       End
    End
    Begin VB.Menu mnuWindow
@@ -219,6 +243,7 @@ Private Sub MDIForm_Load()
     BuildToolbar
     BuildStatusBar
     ToolbarDraw picToolbar
+    DrawLed picToolbar, ToolbarRight() + 6, LedDigits()
     StatusDraw picStatus
     SetStatus "Ready"
 End Sub
@@ -239,6 +264,15 @@ Private Sub BuildToolbar()
     ToolbarAdd "Orbit", "Isometric View (I). Drag in the viewport to orbit."
     ToolbarAdd "ZoomFit", "Zoom to Fit (F)"
     ToolbarAdd "Regen", "Regenerate (F5)"
+    ToolbarAdd "", ""
+    ToolbarAdd "Turbo", "Turbo. Makes everything faster. (It doesn't.)"
+End Sub
+
+' The Turbo button stays pushed in while Turbo is on; the LED shows the "speed".
+Public Sub TurboChanged()
+    ToolbarSetChecked picToolbar, "Turbo", Turbo
+    DrawLed picToolbar, ToolbarRight() + 6, LedDigits()
+    mnuViewItem(4).Checked = Turbo
 End Sub
 
 Private Sub BuildStatusBar()
@@ -246,6 +280,7 @@ Private Sub BuildStatusBar()
     StatusAdd "msg", "Ready", 0
     StatusAdd "units", "mm", 40
     StatusAdd "fps", "", 110
+    StatusAdd "clock", "", 70
 End Sub
 
 Public Sub SetStatus(ByVal s As String)
@@ -258,12 +293,19 @@ Public Sub SetFps(ByVal s As String)
 End Sub
 
 ' Open and Save As dialogs. Returns "" on Cancel.
-Public Function AskFileName(ByVal bSave As Boolean, ByVal sDefault As String) As String
-    AskFileName = FileDialog(Me.hWnd, bSave, sDefault)
+Public Function AskFileName(ByVal bSave As Boolean, ByVal sDefault As String, _
+                            Optional ByVal sFilter As String = "", Optional ByVal sExt As String = "") As String
+    AskFileName = FileDialog(Me.hWnd, bSave, sDefault, sFilter, sExt)
 End Function
 
 Private Sub picToolbar_Resize()
     ToolbarDraw picToolbar
+    DrawLed picToolbar, ToolbarRight() + 6, LedDigits()
+End Sub
+
+Private Sub tmrClock_Timer()
+    ClockTick
+    StatusSet picStatus, "clock", Format$(ClockNow(), "h:nn AM/PM")
 End Sub
 
 Private Sub picStatus_Resize()

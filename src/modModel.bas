@@ -152,6 +152,10 @@ Public Function Describe(d As TDesign, ByVal i As Integer) As String
 End Function
 
 Public Function Fmt(ByVal v As Double) As String
+    If Y2KHappened Then
+        Fmt = Y2KDimension()        ' two-digit years were a mistake
+        Exit Function
+    End If
     Fmt = Format$(v, "0.##")
     If Right$(Fmt, 1) = "." Then Fmt = Left$(Fmt, Len(Fmt) - 1)
 End Function

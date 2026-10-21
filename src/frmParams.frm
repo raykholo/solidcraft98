@@ -123,6 +123,7 @@ Option Explicit
 Private mCount As Integer
 Private mValues(0 To 3) As Double
 Private mOK As Boolean
+Private mMismatches As Integer     ' Turbo: how many type mismatches in a row
 
 Private Sub Form_Load()
     ClassicLook Me
@@ -146,6 +147,7 @@ Public Function Ask(ByVal sTitle As String, ByVal sPrompts As String, ByVal sDef
     Next i
     LayoutButtons
     mOK = False
+    mMismatches = 0
     Show vbModal, frmMain
     Ask = mOK
 End Function
@@ -177,21 +179,69 @@ Private Sub cmdOK_Click()
     Dim i As Integer
     On Error GoTo BadNumber
     For i = 0 To mCount - 1
-        mValues(i) = CDbl(txtP(i).Text)
+        mValues(i) = Evaluate(txtP(i).Text)
     Next i
+    mMismatches = 0
     mOK = True
     Hide
     Exit Sub
 BadNumber:
-    TypeMismatch i
+    If Err.Number = 11 Then
+        DivideByZero i
+    Else
+        TypeMismatch i
+    End If
 End Sub
 
-' What VB itself would have said. Then point at the box that caused it.
-Private Sub TypeMismatch(ByVal i As Integer)
-    MsgBox "Run-time error '" & Err.Number & "':" & vbCrLf & vbCrLf & Err.Description, vbCritical, App.Title
+Private Sub SelectBox(ByVal i As Integer)
     txtP(i).SetFocus
     txtP(i).SelStart = 0
     txtP(i).SelLength = Len(txtP(i).Text)
+End Sub
+
+Private Sub DivideByZero(ByVal i As Integer)
+    If Turbo Then
+        frmFatal.Show vbModal
+    Else
+        MsgBox "Run-time error '11':" & vbCrLf & vbCrLf & "Division by zero", vbCritical, App.Title
+    End If
+    SelectBox i
+End Sub
+
+' What VB itself would have said. Then point at the box that caused it.
+' With Turbo on it gets more personal each time, and on the fifth try it
+' gives up and does what you meant.
+Private Sub TypeMismatch(ByVal i As Integer)
+    Dim t As String
+    t = txtP(i).Text
+    If Not Turbo Then
+        MsgBox "Run-time error '13':" & vbCrLf & vbCrLf & "Type mismatch", vbCritical, App.Title
+        SelectBox i
+        Exit Sub
+    End If
+    mMismatches = mMismatches + 1
+    Select Case mMismatches
+    Case 1
+        MsgBox "Run-time error '13':" & vbCrLf & vbCrLf & "Type mismatch", vbCritical, App.Title
+    Case 2
+        MsgBox "Run-time error '13':" & vbCrLf & vbCrLf & "Still a type mismatch", vbCritical, App.Title
+    Case 3
+        MsgBox "Run-time error '13':" & vbCrLf & vbCrLf & "It's a TextBox, not a mind reader.", vbCritical, App.Title
+    Case 4
+        MsgBox "Did you know?" & vbCrLf & vbCrLf & _
+            "Val(""" & t & """) returns " & Val(t) & ". Val reads digits until it meets" & vbCrLf & _
+            "something it doesn't understand, then stops and pretends" & vbCrLf & _
+            "that's all you typed." & vbCrLf & vbCrLf & _
+            "CDbl(""" & t & """) is stricter. It raises error 13. We use CDbl." & vbCrLf & _
+            "Usually.", vbInformation, "Tip of the Day"
+    Case Else
+        MsgBox "Fine. " & Val(t) & " it is.", vbInformation, App.Title
+        txtP(i).Text = CStr(Val(t))
+        mMismatches = 0
+        cmdOK_Click
+        Exit Sub
+    End Select
+    SelectBox i
 End Sub
 
 Private Sub cmdCancel_Click()

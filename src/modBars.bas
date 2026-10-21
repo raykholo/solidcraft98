@@ -12,6 +12,7 @@ Private Type TButton
     Left As Long
     Width As Long
     IsSep As Boolean
+    Checked As Boolean
 End Type
 
 Private Type TPanel
@@ -61,6 +62,18 @@ Public Sub ToolbarAdd(ByVal sKey As String, ByVal sTip As String)
     End If
 End Sub
 
+' A latched button (like Turbo) stays pushed in while Checked.
+Public Sub ToolbarSetChecked(ByVal pic As PictureBox, ByVal sKey As String, ByVal bChecked As Boolean)
+    Dim i As Integer
+    For i = 1 To mCount
+        If mButtons(i).Key = sKey Then
+            mButtons(i).Checked = bChecked
+            DrawButton pic, i
+            pic.Refresh
+        End If
+    Next i
+End Sub
+
 ' Where the toolbar's buttons end, for things drawn after them.
 Public Function ToolbarRight() As Long
     If mCount > 0 Then ToolbarRight = mButtons(mCount).Left + mButtons(mCount).Width
@@ -85,7 +98,7 @@ Private Sub DrawButton(ByVal pic As PictureBox, ByVal i As Integer)
         pic.Line (x + 4, y + 1)-(x + 4, y + h - 1), BAR_LIGHT
         Exit Sub
     End If
-    If i = mDown And i = mHot Then
+    If (i = mDown And i = mHot) Or mButtons(i).Checked Then
         Bevel pic, x, y, w, h, BAR_SHADOW, BAR_LIGHT
         off = 1
     ElseIf i = mHot Then
@@ -158,6 +171,52 @@ Public Sub ToolbarMouseLeave(ByVal pic As PictureBox)
     mHot = 0
     DrawButton pic, old
     pic.Refresh
+End Sub
+
+' ---- The turbo LED: two red seven-segment digits and "MHz" ----
+
+Public Sub DrawLed(ByVal pic As PictureBox, ByVal x As Long, ByVal sDigits As String)
+    Dim i As Integer, y As Long
+    y = BAR_TOP + 1
+    pic.Line (x, y)-(x + 50, y + BTN_H - 3), BAR_FACE, BF
+    Bevel pic, x, y, 32, BTN_H - 2, BAR_SHADOW, BAR_LIGHT
+    pic.Line (x + 1, y + 1)-(x + 30, y + BTN_H - 4), RGB(24, 0, 0), BF
+    For i = 1 To Len(sDigits)
+        SevenSeg pic, x + 4 + (i - 1) * 13, y + 3, Mid$(sDigits, i, 1)
+    Next i
+    TextAt pic, x + 35, y + 4, "MHz", vbBlack
+    pic.Refresh
+End Sub
+
+' One digit, 10 x 15 pixels. Unlit segments glow a little, like the real thing.
+Private Sub SevenSeg(ByVal pic As PictureBox, ByVal x As Long, ByVal y As Long, ByVal d As String)
+    Dim lit As String, segs As String, k As Integer, c As Long
+    ' segments a b c d e f g, for 0-9
+    Select Case d
+    Case "0": lit = "1111110"
+    Case "1": lit = "0110000"
+    Case "2": lit = "1101101"
+    Case "3": lit = "1111001"
+    Case "4": lit = "0110011"
+    Case "5": lit = "1011011"
+    Case "6": lit = "1011111"
+    Case "7": lit = "1110000"
+    Case "8": lit = "1111111"
+    Case "9": lit = "1111011"
+    Case Else: lit = "0000001"
+    End Select
+    For k = 1 To 7
+        If Mid$(lit, k, 1) = "1" Then c = RGB(255, 32, 0) Else c = RGB(64, 0, 0)
+        Select Case k
+        Case 1: pic.Line (x + 2, y)-(x + 8, y + 2), c, BF
+        Case 2: pic.Line (x + 8, y + 1)-(x + 10, y + 7), c, BF
+        Case 3: pic.Line (x + 8, y + 8)-(x + 10, y + 14), c, BF
+        Case 4: pic.Line (x + 2, y + 13)-(x + 8, y + 15), c, BF
+        Case 5: pic.Line (x, y + 8)-(x + 2, y + 14), c, BF
+        Case 6: pic.Line (x, y + 1)-(x + 2, y + 7), c, BF
+        Case 7: pic.Line (x + 2, y + 7)-(x + 8, y + 8), c, BF
+        End Select
+    Next k
 End Sub
 
 ' ---- Status bar ----
