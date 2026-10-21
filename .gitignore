@@ -7,3 +7,5 @@
 
 
 *.meta
+__pycache__/
+*.pyc
