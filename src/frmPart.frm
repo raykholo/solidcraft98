@@ -77,6 +77,7 @@ Private mFrames As Long, mFrameStart As Single
 Private mLastDraw As Single
 Private mRegenTries As Integer
 Private mKonami As Integer
+Private mSelected As Integer      ' feature picked in the tree or timeline
 
 Private Const GAP As Single = 60
 
@@ -121,6 +122,7 @@ Public Sub RefreshAll(ByVal bFit As Boolean)
     d = DocIndex
     If d = 0 Then Exit Sub
     Caption = DocTitle(d)
+    If mSelected > Docs(d).Count Then mSelected = 0
     FillTree
     FillTimeline
     mEdgeCount = Regenerate(Docs(d), mEdges)
@@ -260,6 +262,8 @@ Private Sub Form_KeyDown(KeyCode As Integer, Shift As Integer)
     Case vbKeyH: sCmd = "Hole"
     Case vbKeyI: sCmd = "ViewIso"
     Case vbKeyF: sCmd = "ZoomFit"
+    Case vbKeyDelete: sCmd = "Delete"
+    Case vbKeyReturn: sCmd = "Edit"
     Case vbKeyAdd, 187: ZoomBy 1.25: KeyCode = 0
     Case vbKeySubtract, 189: ZoomBy 0.8: KeyCode = 0
     End Select
@@ -355,10 +359,32 @@ Private Sub picView_MouseUp(Button As Integer, Shift As Integer, X As Single, Y 
     Redraw          ' the last position, in case Turbo skipped it
 End Sub
 
+' The feature selected in the tree or the timeline, whichever was used last. 0 if none.
+Public Function SelectedFeature() As Integer
+    SelectedFeature = mSelected
+End Function
+
+Private Sub tvwTree_DblClick()
+    If mSelected > 0 Then EditFeature Me, mSelected
+End Sub
+
+Private Sub lvwTimeline_ItemClick(ByVal Item As MSComctlLib.ListItem)
+    mSelected = Val(Mid$(Item.Key, 2))
+    frmMain.SetStatus FeatureName(Docs(DocIndex), mSelected) & ": " & Describe(Docs(DocIndex), mSelected)
+End Sub
+
+Private Sub lvwTimeline_DblClick()
+    If mSelected > 0 Then EditFeature Me, mSelected
+End Sub
+
 Private Sub tvwTree_NodeClick(ByVal Node As MSComctlLib.Node)
     Dim i As Integer
-    If Left$(Node.Key, 1) <> "f" Then Exit Sub
+    If Left$(Node.Key, 1) <> "f" Then
+        mSelected = 0
+        Exit Sub
+    End If
     i = Val(Mid$(Node.Key, 2))
+    mSelected = i
     If i >= 1 And i <= lvwTimeline.ListItems.Count Then
         lvwTimeline.ListItems(i).Selected = True
         lvwTimeline.ListItems(i).EnsureVisible

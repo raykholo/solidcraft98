@@ -64,10 +64,11 @@ Attribute VB_Creatable = False
 Attribute VB_PredeclaredId = True
 Attribute VB_Exposed = False
 ' frmCal - Cal, the office-assistant caliper. Our own pixel art.
-' Pops up the first time you sketch a rectangle. Works with Turbo on or off.
+' Pops up the first time you sketch a rectangle in a run. Turbo on or off.
 Option Explicit
 
 Public Silenced As Boolean
+Private mShown As Boolean        ' once per run is plenty
 
 Private Declare Function ShowWindow Lib "user32" (ByVal hWnd As Long, ByVal nCmdShow As Long) As Long
 Private Declare Function SetWindowLong Lib "user32" Alias "SetWindowLongA" (ByVal hWnd As Long, ByVal nIndex As Long, ByVal dwNewLong As Long) As Long
@@ -83,7 +84,8 @@ End Sub
 
 ' Shows Cal near the bottom right of the main window.
 Public Sub Pop(ByVal sSay As String)
-    If Silenced Then Exit Sub
+    If Silenced Or mShown Then Exit Sub
+    mShown = True
     Load Me
     lblSay.Caption = sSay & vbCrLf & vbCrLf & "Would you like help?"
     cmdHelp.Visible = True

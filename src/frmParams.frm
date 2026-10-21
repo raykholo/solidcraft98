@@ -44,12 +44,36 @@ Begin VB.Form frmParams
       Top             =   1680
       Width           =   2040
    End
+   Begin VB.TextBox txtP
+      Height          =   315
+      Index           =   4
+      Left            =   2400
+      TabIndex        =   4
+      Top             =   2160
+      Width           =   2040
+   End
+   Begin VB.TextBox txtP
+      Height          =   315
+      Index           =   5
+      Left            =   2400
+      TabIndex        =   5
+      Top             =   2640
+      Width           =   2040
+   End
+   Begin VB.TextBox txtP
+      Height          =   315
+      Index           =   6
+      Left            =   2400
+      TabIndex        =   6
+      Top             =   3120
+      Width           =   2040
+   End
    Begin VB.CommandButton cmdOK
       Caption         =   "OK"
       Default         =   -1  'True
       Height          =   375
       Left            =   1080
-      TabIndex        =   4
+      TabIndex        =   7
       Top             =   2220
       Width           =   1095
    End
@@ -58,7 +82,7 @@ Begin VB.Form frmParams
       Caption         =   "Cancel"
       Height          =   375
       Left            =   2280
-      TabIndex        =   5
+      TabIndex        =   8
       Top             =   2220
       Width           =   1095
    End
@@ -66,7 +90,7 @@ Begin VB.Form frmParams
       Caption         =   "&Help"
       Height          =   375
       Left            =   3480
-      TabIndex        =   6
+      TabIndex        =   9
       Top             =   2220
       Width           =   1095
    End
@@ -75,7 +99,7 @@ Begin VB.Form frmParams
       Height          =   255
       Index           =   0
       Left            =   240
-      TabIndex        =   7
+      TabIndex        =   10
       Top             =   285
       Width           =   2055
    End
@@ -84,7 +108,7 @@ Begin VB.Form frmParams
       Height          =   255
       Index           =   1
       Left            =   240
-      TabIndex        =   8
+      TabIndex        =   11
       Top             =   765
       Width           =   2055
    End
@@ -93,7 +117,7 @@ Begin VB.Form frmParams
       Height          =   255
       Index           =   2
       Left            =   240
-      TabIndex        =   9
+      TabIndex        =   12
       Top             =   1245
       Width           =   2055
    End
@@ -102,8 +126,35 @@ Begin VB.Form frmParams
       Height          =   255
       Index           =   3
       Left            =   240
-      TabIndex        =   10
+      TabIndex        =   13
       Top             =   1725
+      Width           =   2055
+   End
+   Begin VB.Label lblP
+      Caption         =   "Value"
+      Height          =   255
+      Index           =   4
+      Left            =   240
+      TabIndex        =   14
+      Top             =   2205
+      Width           =   2055
+   End
+   Begin VB.Label lblP
+      Caption         =   "Value"
+      Height          =   255
+      Index           =   5
+      Left            =   240
+      TabIndex        =   15
+      Top             =   2685
+      Width           =   2055
+   End
+   Begin VB.Label lblP
+      Caption         =   "Value"
+      Height          =   255
+      Index           =   6
+      Left            =   240
+      TabIndex        =   16
+      Top             =   3165
       Width           =   2055
    End
 End
@@ -121,7 +172,8 @@ Attribute VB_Exposed = False
 Option Explicit
 
 Private mCount As Integer
-Private mValues(0 To 3) As Double
+Private Const MAX_FIELDS As Integer = 7
+Private mValues(0 To MAX_FIELDS - 1) As Double
 Private mOK As Boolean
 Private mMismatches As Integer     ' Turbo: how many type mismatches in a row
 
@@ -135,9 +187,9 @@ Public Function Ask(ByVal sTitle As String, ByVal sPrompts As String, ByVal sDef
     p = Split(sPrompts, "|")
     d = Split(sDefaults, "|")
     mCount = UBound(p) + 1
-    If mCount > 4 Then mCount = 4
+    If mCount > MAX_FIELDS Then mCount = MAX_FIELDS
     Caption = sTitle
-    For i = 0 To 3
+    For i = 0 To MAX_FIELDS - 1
         lblP(i).Visible = (i < mCount)
         txtP(i).Visible = (i < mCount)
         If i < mCount Then

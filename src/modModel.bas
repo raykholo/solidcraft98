@@ -6,7 +6,7 @@ Attribute VB_Name = "modModel"
 Option Explicit
 
 Public Const FILE_MAGIC As String = "SC98"
-Public Const FILE_VERSION As Integer = 3
+Public Const FILE_VERSION As Integer = 4
 Public Const MAX_FEATURES As Integer = 64    ' someone once had 41 features
 
 Public Const FK_NONE As Integer = 0
@@ -26,6 +26,29 @@ Public Type TFeature
     P2 As Double           ' height | - | - | - | hole depth (0 = through all)
     Ref As Integer         ' the feature this one is built on
     Suppressed As Integer
+    P3 As Double           ' rectangle corner radius
+    Reserved(1 To 3) As Double   ' so the next version won't break every file (it will anyway)
+End Type
+
+' Version 3 files, from before corner radii. Read and converted on Open.
+Private Type TFeatureV3
+    Kind As Integer
+    Name As String * 24
+    X As Double
+    Y As Double
+    Z As Double
+    P1 As Double
+    P2 As Double
+    Ref As Integer
+    Suppressed As Integer
+End Type
+
+Private Type TDesignV3
+    Magic As String * 4
+    Version As Integer
+    Title As String * 64
+    Count As Integer
+    Features(1 To MAX_FEATURES) As TFeatureV3
 End Type
 
 Public Type TFileHeader
@@ -114,20 +137,50 @@ Public Function LastFreeSketch(d As TDesign) As Integer
     Next i
 End Function
 
-' The last extruded rectangle, i.e. a box with a top face to drill.
-Public Function LastBox(d As TDesign) As Integer
+' The last extrude, the default place for a hole.
+Public Function LastSolid(d As TDesign) As Integer
     Dim i As Integer
     For i = d.Count To 1 Step -1
         If d.Features(i).Kind = FK_EXTRUDE Then
-            If d.Features(i).Ref >= 1 Then
-                If d.Features(d.Features(i).Ref).Kind = FK_SKETCH_RECT Then
-                    LastBox = i
-                    Exit Function
-                End If
-            End If
+            LastSolid = i
+            Exit Function
         End If
     Next i
 End Function
+
+' Marks feature i and everything built on it, directly or not. Returns how many.
+Public Function MarkDependents(d As TDesign, ByVal i As Integer, gone() As Boolean) As Integer
+    Dim j As Integer
+    ReDim gone(0 To d.Count)
+    gone(i) = True
+    MarkDependents = 1
+    For j = i + 1 To d.Count
+        If d.Features(j).Ref >= 1 And d.Features(j).Ref <= d.Count Then
+            If gone(d.Features(j).Ref) Then
+                gone(j) = True
+                MarkDependents = MarkDependents + 1
+            End If
+        End If
+    Next j
+End Function
+
+' Removes the marked features and renumbers what the rest refer to.
+Public Sub DeleteMarked(d As TDesign, gone() As Boolean)
+    Dim i As Integer, n As Integer, newIndex() As Integer, blank As TFeature
+    ReDim newIndex(0 To d.Count)
+    For i = 1 To d.Count
+        If Not gone(i) Then
+            n = n + 1
+            newIndex(i) = n
+            d.Features(n) = d.Features(i)
+            If d.Features(n).Ref >= 1 Then d.Features(n).Ref = newIndex(d.Features(n).Ref)
+        End If
+    Next i
+    For i = n + 1 To d.Count
+        d.Features(i) = blank
+    Next i
+    d.Count = n
+End Sub
 
 Public Function Describe(d As TDesign, ByVal i As Integer) As String
     Dim f As TFeature
@@ -135,8 +188,11 @@ Public Function Describe(d As TDesign, ByVal i As Integer) As String
     Select Case f.Kind
     Case FK_SKETCH_RECT
         Describe = Fmt(f.P1) & " x " & Fmt(f.P2) & " mm at (" & Fmt(f.X) & ", " & Fmt(f.Y) & ")"
+        If f.P3 > 0 Then Describe = Describe & ", R" & Fmt(f.P3) & " corners"
+        Describe = Describe & SketchPlace(d, f)
     Case FK_SKETCH_CIRCLE
         Describe = "R " & Fmt(f.P1) & " mm at (" & Fmt(f.X) & ", " & Fmt(f.Y) & ")"
+        Describe = Describe & SketchPlace(d, f)
     Case FK_EXTRUDE
         Describe = FeatureName(d, f.Ref) & ", " & Fmt(f.P1) & " mm"
     Case FK_REVOLVE
@@ -149,6 +205,16 @@ Public Function Describe(d As TDesign, ByVal i As Integer) As String
             Describe = Describe & Fmt(f.P2) & " mm deep"
         End If
     End Select
+End Function
+
+'  ", on Extrude1" / ", on Extrude1 +2" / ", Z 5" / "" for where a sketch sits.
+Private Function SketchPlace(d As TDesign, f As TFeature) As String
+    If f.Ref > 0 Then
+        SketchPlace = ", on " & FeatureName(d, f.Ref)
+        If f.Z <> 0 Then SketchPlace = SketchPlace & IIf(f.Z > 0, " +", " ") & Fmt(f.Z)
+    ElseIf f.Z <> 0 Then
+        SketchPlace = ", Z " & Fmt(f.Z)
+    End If
 End Function
 
 Public Function Fmt(ByVal v As Double) As String
@@ -196,10 +262,33 @@ Public Function LoadDesign(d As TDesign, ByVal sPath As String) As Boolean
             "Please upgrade to SolidCraft 98 Second Edition.", vbExclamation, App.Title
         Exit Function
     End If
-    If h.Version < FILE_VERSION Then
+    If h.Version < 3 Then
         Close #fh
         MsgBox "This file was saved by an older version of SolidCraft." & vbCrLf & vbCrLf & _
-            "Older files are not supported. They never were.", vbExclamation, App.Title
+            "Versions before 3 are not supported. They never were.", vbExclamation, App.Title
+        Exit Function
+    End If
+    If h.Version = 3 Then
+        Dim old As TDesignV3, i As Integer
+        Get #fh, 1, old
+        Close #fh
+        NewDesign d, RTrim$(old.Title)
+        d.Count = old.Count
+        For i = 1 To old.Count
+            d.Features(i).Kind = old.Features(i).Kind
+            d.Features(i).Name = old.Features(i).Name
+            d.Features(i).X = old.Features(i).X
+            d.Features(i).Y = old.Features(i).Y
+            d.Features(i).Z = old.Features(i).Z
+            d.Features(i).P1 = old.Features(i).P1
+            d.Features(i).P2 = old.Features(i).P2
+            d.Features(i).Ref = old.Features(i).Ref
+            d.Features(i).Suppressed = old.Features(i).Suppressed
+        Next i
+        MsgBox "This file was saved by an older version of SolidCraft." & vbCrLf & vbCrLf & _
+            "It has been converted. Save it to keep the new format." & vbCrLf & _
+            "(This has never happened before.)", vbInformation, App.Title
+        LoadDesign = True
         Exit Function
     End If
     Get #fh, 1, d

@@ -99,8 +99,11 @@ REF_COMCTL = {
 
 
 def strip_ocx_names(line):
-    """MSComctlLib.Node -> Node: the native controls aren't in a library namespace."""
-    return re.sub(r"\bMSComctlLib\.", "", line)
+    """MSComctlLib.Node -> Node: the native controls aren't in a library namespace.
+    Also: MSCOMCTL's ListView raises ItemClick(ByVal Item), twinBASIC's raises
+    ItemClick(Item), and a handler has to match exactly."""
+    line = re.sub(r"\bMSComctlLib\.", "", line)
+    return re.sub(r"(_ItemClick\()ByVal (Item As )", r"\1\2", line)
 
 
 def guid(*parts):

@@ -106,6 +106,21 @@ Begin VB.MDIForm frmMain
          Shortcut        =   ^Z
          Tag             =   "Undo"
       End
+      Begin VB.Menu mnuEditItem
+         Caption         =   "-"
+         Index           =   1
+      End
+      Begin VB.Menu mnuEditItem
+         Caption         =   "&Edit Feature..."
+         Index           =   2
+         Tag             =   "Edit"
+      End
+      Begin VB.Menu mnuEditItem
+         Caption         =   "&Delete Feature"
+         Index           =   3
+         Shortcut        =   {DEL}
+         Tag             =   "Delete"
+      End
    End
    Begin VB.Menu mnuSketch
       Caption         =   "&Sketch"
@@ -242,6 +257,7 @@ Private Sub MDIForm_Load()
     mnuFeatureItem(2).Caption = "&Hole..." & vbTab & "H"
     mnuViewItem(0).Caption = "&Isometric" & vbTab & "I"
     mnuViewItem(1).Caption = "Zoom to &Fit" & vbTab & "F"
+    mnuEditItem(2).Caption = "&Edit Feature..." & vbTab & "Enter"
     BuildToolbar
     BuildStatusBar
     ToolbarDraw picToolbar
