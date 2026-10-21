@@ -22,7 +22,7 @@ Public Type TTri
     X3 As Double
     Y3 As Double
     Z3 As Double
-    Body As Integer          ' the feature that made it
+    Body As Integer          ' the feature that made it (a hole's walls are the hole's)
 End Type
 
 Public Const MESH_SEGS As Integer = 64
@@ -33,6 +33,7 @@ Private Type THole
     R As Double
     ZTop As Double
     ZBot As Double
+    Feat As Integer          ' the hole feature
 End Type
 
 Private Const EPS As Double = 0.000001
@@ -149,7 +150,7 @@ Private Function CollectHoles(d As TDesign, ByVal i As Integer, ByVal z1 As Doub
                     If zt >= z1 - EPS And zb <= z1 + EPS Then
                         If n > UBound(h) Then ReDim Preserve h(0 To n * 2)
                         h(n).X = d.Features(j).X: h(n).Y = d.Features(j).Y: h(n).R = r
-                        h(n).ZTop = zt: h(n).ZBot = zb
+                        h(n).ZTop = zt: h(n).ZBot = zb: h(n).Feat = j
                         n = n + 1
                     End If
                 End If
@@ -256,11 +257,11 @@ Private Sub MeshExtrude(d As TDesign, ByVal i As Integer)
         zb = h(k).ZBot
         If zb < z0 Then zb = z0
         If zb < z1 - EPS Then
-            HoleWall h(k).X, h(k).Y, h(k).R, zb, z1, i
-            If zb > z0 + EPS Then HoleDisc h(k).X, h(k).Y, h(k).R, zb, True, i
-            If inFoot(k) And h(k).ZTop <= z1 + EPS Then HoleDisc h(k).X, h(k).Y, h(k).R, z1, False, i
+            HoleWall h(k).X, h(k).Y, h(k).R, zb, z1, h(k).Feat
+            If zb > z0 + EPS Then HoleDisc h(k).X, h(k).Y, h(k).R, zb, True, h(k).Feat
+            If inFoot(k) And h(k).ZTop <= z1 + EPS Then HoleDisc h(k).X, h(k).Y, h(k).R, z1, False, h(k).Feat
         ElseIf inFoot(k) Then
-            HoleDisc h(k).X, h(k).Y, h(k).R, z1, True, i       ' a hole above that stops right here
+            HoleDisc h(k).X, h(k).Y, h(k).R, z1, True, h(k).Feat       ' a hole above that stops right here
         End If
     Next k
 End Sub

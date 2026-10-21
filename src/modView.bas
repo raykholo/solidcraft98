@@ -1,5 +1,6 @@
 Attribute VB_Name = "modView"
-' modView - projects the edges and draws them on a PictureBox, one Line at a time.
+' modView - projects the edges and draws them on a PictureBox, one Line at a
+' time. (View > Shaded is in modShade.)
 Option Explicit
 
 Public Type TView
@@ -10,7 +11,7 @@ Public Type TView
     PanY As Double
 End Type
 
-Public Const ISO_YAW As Double = 45
+Public Const ISO_YAW As Double = 135      ' looking at the front, right and top
 Public Const ISO_PITCH As Double = 35.264
 
 Public Sub ResetView(v As TView)
@@ -28,8 +29,31 @@ Public Sub ProjectRaw(v As TView, ByVal x As Double, ByVal y As Double, ByVal z 
     cp = Cos(v.Pitch * PI / 180): sp = Sin(v.Pitch * PI / 180)
     x1 = x * cy - y * sy_
     y1 = x * sy_ + y * cy
-    sx = x1
+    sx = -x1
     sy = z * cp - y1 * sp
+End Sub
+
+' The view's directions in model space: toward the eye, screen right, screen up.
+Public Sub ViewAxes(v As TView, ex As Double, ey As Double, ez As Double, _
+                    rx As Double, ry As Double, rz As Double, ux As Double, uy As Double, uz As Double)
+    Dim cy As Double, sy_ As Double, cp As Double, sp As Double
+    cy = Cos(v.Yaw * PI / 180): sy_ = Sin(v.Yaw * PI / 180)
+    cp = Cos(v.Pitch * PI / 180): sp = Sin(v.Pitch * PI / 180)
+    ex = sy_ * cp: ey = cy * cp: ez = sp
+    rx = -cy: ry = sy_: rz = 0
+    ux = -sy_ * sp: uy = -cy * sp: uz = cp
+End Sub
+
+' 3D mm -> pixel position, and depth (bigger is nearer), for the shaded view.
+Public Sub ProjectPixel(v As TView, pic As PictureBox, ByVal x As Double, ByVal y As Double, ByVal z As Double, _
+                        px As Double, py As Double, dep As Double)
+    Dim sx As Double, sy As Double, ex As Double, ey As Double, ez As Double
+    Dim rx As Double, ry As Double, rz As Double, ux As Double, uy As Double, uz As Double
+    ProjectRaw v, x, y, z, sx, sy
+    px = pic.ScaleWidth / 2 + v.PanX + sx * v.Zoom
+    py = pic.ScaleHeight / 2 + v.PanY - sy * v.Zoom
+    ViewAxes v, ex, ey, ez, rx, ry, rz, ux, uy, uz
+    dep = x * ex + y * ey + z * ez
 End Sub
 
 Private Sub ToScreen(v As TView, pic As PictureBox, ByVal x As Double, ByVal y As Double, ByVal z As Double, px As Single, py As Single)
@@ -82,6 +106,13 @@ Public Sub DrawScene(v As TView, pic As PictureBox, e() As TEdge, ByVal n As Lon
         pic.Line (ax, ay)-(bx, by), e(i).Color
     Next i
     DrawTriad v, pic
+End Sub
+
+Public Sub DrawEdge(v As TView, pic As PictureBox, e As TEdge)
+    Dim ax As Single, ay As Single, bx As Single, by As Single
+    ToScreen v, pic, e.X1, e.Y1, e.Z1, ax, ay
+    ToScreen v, pic, e.X2, e.Y2, e.Z2, bx, by
+    pic.Line (ax, ay)-(bx, by), e.Color
 End Sub
 
 ' A faint floor grid, 10 mm squares, so an empty part isn't just grey.

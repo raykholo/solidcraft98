@@ -62,8 +62,9 @@ Attribute VB_GlobalNameSpace = False
 Attribute VB_Creatable = False
 Attribute VB_PredeclaredId = True
 Attribute VB_Exposed = False
-' frmPart - one part: feature tree on the left, wireframe viewport on the
-' right, timeline along the bottom. The design itself lives in modDoc.
+' frmPart - one part: feature tree on the left, the viewport (wireframe or
+' shaded) on the right, timeline along the bottom. The design itself lives
+' in modDoc.
 Option Explicit
 
 Public DocIndex As Integer
@@ -79,6 +80,12 @@ Private mLastDraw As Single
 Private mRegenTries As Integer
 Private mKonami As Integer
 Private mSelected As Integer      ' feature picked in the tree or timeline
+Private mTris() As TTri           ' the part as triangles, for View > Shaded
+Private mTriCount As Long
+Private mFaces() As Long
+Private mMeshOk As Boolean
+Private mMoved As Boolean
+Private mSpinning As Boolean
 
 Private Const GAP As Single = 60
 
@@ -133,6 +140,7 @@ Public Sub RefreshAll(ByVal bFit As Boolean)
     FillTree
     FillTimeline
     mEdgeCount = Regenerate(Docs(d), mEdges)
+    mMeshOk = False
     If bFit Then FitView mView, picView, mEdges, mEdgeCount
     Redraw
 End Sub
@@ -187,11 +195,29 @@ Private Sub FillTimeline()
 End Sub
 
 Public Sub Redraw()
-    DrawScene mView, picView, mEdges, mEdgeCount
-    If Docs(DocIndex).Count = 0 Then
-        TextAt picView, 6, 4, "Empty part. Sketch a rectangle (R) or a circle (C) to begin.", &H404040
+    Dim i As Long
+    ' shaded, unless the view is moving: then wireframe, and shade when it stops
+    If ViewShaded And Not mDragging And Not mSpinning And Docs(DocIndex).Count > 0 Then
+        If Not mMeshOk Then
+            mTriCount = MeshDesign(Docs(DocIndex), mTris, 32)
+            FaceGroups mTris, mTriCount, mFaces
+            mMeshOk = True
+        End If
+        DrawScene mView, picView, mEdges, 0
+        If Not RenderShaded(DocIndex, mView, picView, mTris, mTriCount, mFaces) Then Exit Sub
+        ' sketches nothing is built on yet, drawn over the top
+        For i = 0 To mEdgeCount - 1
+            If mEdges(i).Color = COL_SKETCH Or mEdges(i).Color = COL_AXIS Then DrawEdge mView, picView, mEdges(i)
+        Next i
+        TextAt picView, 6, 4, "Shaded, " & mTriCount & " triangles", &H404040
     Else
-        TextAt picView, 6, 4, mEdgeCount & " edges", &H404040
+        ShadeGen(DocIndex) = ShadeGen(DocIndex) + 1      ' stops a render in progress
+        DrawScene mView, picView, mEdges, mEdgeCount
+        If Docs(DocIndex).Count = 0 Then
+            TextAt picView, 6, 4, "Empty part. Sketch a rectangle (R) or a circle (C) to begin.", &H404040
+        Else
+            TextAt picView, 6, 4, mEdgeCount & " edges", &H404040
+        End If
     End If
     picView.Refresh
 End Sub
@@ -252,6 +278,7 @@ Private Sub Form_QueryUnload(Cancel As Integer, UnloadMode As Integer)
 End Sub
 
 Private Sub Form_Unload(Cancel As Integer)
+    ShadeGen(DocIndex) = ShadeGen(DocIndex) + 1    ' a render of this part stops
     FreeDocSlot DocIndex
     DocIndex = 0
 End Sub
@@ -272,6 +299,7 @@ Private Sub Form_KeyDown(KeyCode As Integer, Shift As Integer)
     Case vbKeyH: sCmd = "Hole"
     Case vbKeyI: sCmd = "ViewIso"
     Case vbKeyF: sCmd = "ZoomFit"
+    Case vbKeyS: sCmd = "Shaded"
     Case vbKeyDelete: sCmd = "Delete"
     Case vbKeyReturn: sCmd = "Edit"
     Case vbKeyAdd, 187: ZoomBy 1.25: KeyCode = 0
@@ -306,6 +334,7 @@ Private Sub KonamiSpin()
     Dim t As Single, y0 As Double
     t = Timer
     y0 = mView.Yaw
+    mSpinning = True
     frmMain.SetFps "60 fps (lying)"
     frmMain.SetStatus "Cheat activated. Full speed for three seconds."
     Do While Timer - t < 3 And Timer >= t
@@ -314,6 +343,7 @@ Private Sub KonamiSpin()
         DoEvents
     Loop
     mView.Yaw = y0
+    mSpinning = False
     Redraw
     frmMain.SetFps "60 fps (lying)"
 End Sub
@@ -331,6 +361,7 @@ Private Sub picView_MouseDown(Button As Integer, Shift As Integer, X As Single, 
     mDragging = True
     mDragButton = Button
     mDragX = X: mDragY = Y
+    mMoved = False
     mFrames = 0: mFrameStart = Timer
 End Sub
 
@@ -338,7 +369,7 @@ Private Sub picView_MouseMove(Button As Integer, Shift As Integer, X As Single, 
     Dim el As Single
     If Not mDragging Then Exit Sub
     If mDragButton = vbLeftButton Then
-        mView.Yaw = mView.Yaw - (X - mDragX) * 0.5
+        mView.Yaw = mView.Yaw + (X - mDragX) * 0.5
         mView.Pitch = mView.Pitch + (Y - mDragY) * 0.5
         If mView.Pitch > 90 Then mView.Pitch = 90
         If mView.Pitch < -90 Then mView.Pitch = -90
@@ -346,6 +377,7 @@ Private Sub picView_MouseMove(Button As Integer, Shift As Integer, X As Single, 
         mView.PanX = mView.PanX + (X - mDragX)
         mView.PanY = mView.PanY + (Y - mDragY)
     End If
+    If X <> mDragX Or Y <> mDragY Then mMoved = True
     mDragX = X: mDragY = Y
     ' Turbo caps orbit at 4 fps; the mouse keeps going, the picture catches up
     If Timer - mLastDraw < OrbitFrameInterval() And Timer >= mLastDraw Then Exit Sub
@@ -366,7 +398,8 @@ End Sub
 
 Private Sub picView_MouseUp(Button As Integer, Shift As Integer, X As Single, Y As Single)
     mDragging = False
-    Redraw          ' the last position, in case Turbo skipped it
+    ' the last position, in case Turbo skipped it; shaded again if it moved
+    If mMoved Or Not ViewShaded Then Redraw
 End Sub
 
 ' The feature selected in the tree or the timeline, whichever was used last. 0 if none.

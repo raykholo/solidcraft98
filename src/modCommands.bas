@@ -31,6 +31,7 @@ Public Sub RunCommand(ByVal sCmd As String)
     Case "ZoomFit": WithPart "ZoomFit"
     Case "Regen": WithPart "Regen"
 
+    Case "Shaded": CmdShaded
     Case "Turbo": SetTurbo Not Turbo
 
     Case "Cascade": frmMain.Arrange vbCascade
@@ -217,6 +218,13 @@ Private Sub CmdExportStl()
     Dim p As frmPart
     If Not NeedPart(p) Then Exit Sub
     ExportStl p
+End Sub
+
+Private Sub CmdShaded()
+    ViewShaded = Not ViewShaded
+    frmMain.ShadedChanged
+    If Not ViewShaded Then frmMain.SetStatus "Wireframe."
+    RefreshAllParts
 End Sub
 
 Private Sub CmdClose()

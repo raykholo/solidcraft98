@@ -177,12 +177,17 @@ Begin VB.MDIForm frmMain
          Tag             =   "Regen"
       End
       Begin VB.Menu mnuViewItem
-         Caption         =   "-"
+         Caption         =   "&Shaded"
          Index           =   3
+         Tag             =   "Shaded"
+      End
+      Begin VB.Menu mnuViewItem
+         Caption         =   "-"
+         Index           =   4
       End
       Begin VB.Menu mnuViewItem
          Caption         =   "&Turbo"
-         Index           =   4
+         Index           =   5
          Tag             =   "Turbo"
       End
    End
@@ -262,6 +267,7 @@ Private Sub MDIForm_Load()
     mnuFeatureItem(2).Caption = "&Hole..." & vbTab & "H"
     mnuViewItem(0).Caption = "&Isometric" & vbTab & "I"
     mnuViewItem(1).Caption = "Zoom to &Fit" & vbTab & "F"
+    mnuViewItem(3).Caption = "&Shaded" & vbTab & "S"
     mnuEditItem(2).Caption = "&Edit Feature..." & vbTab & "Enter"
     BuildToolbar
     BuildStatusBar
@@ -285,6 +291,7 @@ Private Sub BuildToolbar()
     ToolbarAdd "Hole", "Hole (H)"
     ToolbarAdd "", ""
     ToolbarAdd "Orbit", "Isometric View (I). Drag in the viewport to orbit."
+    ToolbarAdd "Shaded", "Shaded (S). Rendered in software, properly."
     ToolbarAdd "ZoomFit", "Zoom to Fit (F)"
     ToolbarAdd "Regen", "Regenerate (F5)"
     ToolbarAdd "", ""
@@ -295,7 +302,13 @@ End Sub
 Public Sub TurboChanged()
     ToolbarSetChecked picToolbar, "Turbo", Turbo
     DrawLed picToolbar, ToolbarRight() + 6, LedDigits()
-    mnuViewItem(4).Checked = Turbo
+    mnuViewItem(5).Checked = Turbo
+End Sub
+
+' The Shaded button stays pushed in while the view is shaded.
+Public Sub ShadedChanged()
+    ToolbarSetChecked picToolbar, "Shaded", ViewShaded
+    mnuViewItem(3).Checked = ViewShaded
 End Sub
 
 Private Sub BuildStatusBar()
