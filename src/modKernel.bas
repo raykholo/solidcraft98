@@ -267,6 +267,8 @@ Public Function RefOk(d As TDesign, ByVal i As Integer) As Boolean
         End If
     Case FK_EXTRUDE, FK_REVOLVE
         If f.Ref >= 1 And f.Ref < i Then RefOk = IsSketch(d.Features(f.Ref).Kind)
+    Case FK_FOREIGN
+        RefOk = True          ' nothing to build, nothing to break
     Case FK_HOLE
         If f.Ref >= 1 And f.Ref < i Then
             If d.Features(f.Ref).Kind = FK_EXTRUDE Then

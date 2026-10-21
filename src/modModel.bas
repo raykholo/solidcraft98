@@ -6,7 +6,7 @@ Attribute VB_Name = "modModel"
 Option Explicit
 
 Public Const FILE_MAGIC As String = "SC98"
-Public Const FILE_VERSION As Integer = 4
+Public Const FILE_VERSION As Integer = 5
 Public Const MAX_FEATURES As Integer = 64    ' someone once had 41 features
 
 Public Const FK_NONE As Integer = 0
@@ -15,6 +15,7 @@ Public Const FK_SKETCH_CIRCLE As Integer = 2
 Public Const FK_EXTRUDE As Integer = 3
 Public Const FK_REVOLVE As Integer = 4
 Public Const FK_HOLE As Integer = 5
+Public Const FK_FOREIGN As Integer = 9     ' from a SolidCraft design, and not something SolidCraft 98 can build
 
 Public Type TFeature
     Kind As Integer
@@ -27,6 +28,7 @@ Public Type TFeature
     Ref As Integer         ' the feature this one is built on
     Suppressed As Integer
     P3 As Double           ' rectangle corner radius
+    Info As String * 32    ' FK_FOREIGN: what the feature was in SolidCraft ("fillet")
     Reserved(1 To 3) As Double   ' so the next version won't break every file (it will anyway)
 End Type
 
@@ -49,6 +51,29 @@ Private Type TDesignV3
     Title As String * 64
     Count As Integer
     Features(1 To MAX_FEATURES) As TFeatureV3
+End Type
+
+' Version 4: corner radii, but no room to say what a SolidCraft feature was.
+Private Type TFeatureV4
+    Kind As Integer
+    Name As String * 24
+    X As Double
+    Y As Double
+    Z As Double
+    P1 As Double
+    P2 As Double
+    Ref As Integer
+    Suppressed As Integer
+    P3 As Double
+    Reserved(1 To 3) As Double
+End Type
+
+Private Type TDesignV4
+    Magic As String * 4
+    Version As Integer
+    Title As String * 64
+    Count As Integer
+    Features(1 To MAX_FEATURES) As TFeatureV4
 End Type
 
 Public Type TFileHeader
@@ -82,6 +107,7 @@ Public Function KindName(ByVal k As Integer) As String
     Case FK_EXTRUDE: KindName = "Extrude"
     Case FK_REVOLVE: KindName = "Revolve"
     Case FK_HOLE: KindName = "Hole"
+    Case FK_FOREIGN: KindName = "SolidCraft"
     Case Else: KindName = "?"
     End Select
 End Function
@@ -197,6 +223,8 @@ Public Function Describe(d As TDesign, ByVal i As Integer) As String
         Describe = FeatureName(d, f.Ref) & ", " & Fmt(f.P1) & " mm"
     Case FK_REVOLVE
         Describe = FeatureName(d, f.Ref) & ", " & Fmt(f.P1) & Chr$(176) & " about Y"
+    Case FK_FOREIGN
+        Describe = "From SolidCraft. Not in SolidCraft 98."
     Case FK_HOLE
         Describe = "D " & Fmt(f.P1) & " mm on " & FeatureName(d, f.Ref) & " top face, "
         If f.P2 <= 0 Then
@@ -266,6 +294,27 @@ Public Function LoadDesign(d As TDesign, ByVal sPath As String) As Boolean
         Close #fh
         MsgBox "This file was saved by an older version of SolidCraft." & vbCrLf & vbCrLf & _
             "Versions before 3 are not supported. They never were.", vbExclamation, App.Title
+        Exit Function
+    End If
+    If h.Version = 4 Then
+        Dim v4 As TDesignV4, j As Integer
+        Get #fh, 1, v4
+        Close #fh
+        NewDesign d, RTrim$(v4.Title)
+        d.Count = v4.Count
+        For j = 1 To v4.Count
+            d.Features(j).Kind = v4.Features(j).Kind
+            d.Features(j).Name = v4.Features(j).Name
+            d.Features(j).X = v4.Features(j).X
+            d.Features(j).Y = v4.Features(j).Y
+            d.Features(j).Z = v4.Features(j).Z
+            d.Features(j).P1 = v4.Features(j).P1
+            d.Features(j).P2 = v4.Features(j).P2
+            d.Features(j).Ref = v4.Features(j).Ref
+            d.Features(j).Suppressed = v4.Features(j).Suppressed
+            d.Features(j).P3 = v4.Features(j).P3
+        Next j
+        LoadDesign = True        ' same features, a bigger record: nothing to tell anyone
         Exit Function
     End If
     If h.Version = 3 Then

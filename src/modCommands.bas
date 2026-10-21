@@ -90,19 +90,32 @@ End Sub
 
 Private Sub CmdOpen()
     Dim sPath As String, slot As Integer, p As frmPart
-    sPath = frmMain.AskFileName(False, "")
+    sPath = frmMain.AskFileName(False, "", _
+        "All SolidCraft files (*.sc98, *.solidcraft)|*.sc98;*.solidcraft|SolidCraft 98 Parts (*.sc98)|*.sc98|SolidCraft Designs (*.solidcraft)|*.solidcraft", PART_EXT)
     If Len(sPath) = 0 Then Exit Sub
     slot = NewDocSlot()
     If slot = 0 Then
         MsgBox "Too many parts open. Close one first.", vbExclamation, App.Title
         Exit Sub
     End If
-    If Not LoadDesign(Docs(slot), sPath) Then
-        FreeDocSlot slot
-        Exit Sub
+    If IsSolidCraftDesign(sPath) Then
+        ' a design from SolidCraft itself: rebuilt here, saved as a new .sc98
+        Screen.MousePointer = vbHourglass
+        If Not ImportSolidCraft(sPath, Docs(slot)) Then
+            Screen.MousePointer = vbDefault
+            FreeDocSlot slot
+            Exit Sub
+        End If
+        Screen.MousePointer = vbDefault
+        DocPath(slot) = ""
+    Else
+        If Not LoadDesign(Docs(slot), sPath) Then
+            FreeDocSlot slot
+            Exit Sub
+        End If
+        DocPath(slot) = sPath
+        Docs(slot).Title = FileTitle(sPath)
     End If
-    DocPath(slot) = sPath
-    Docs(slot).Title = FileTitle(sPath)
     Set p = New frmPart
     p.Attach slot
     p.Show
@@ -397,6 +410,11 @@ Private Function AskFeature(d As TDesign, ByVal i As Integer, f As TFeature) As 
             Exit Function
         End If
         f.P1 = frmParams.Value(0)
+
+    Case FK_FOREIGN
+        MsgBox RTrim$(f.Name) & " is a " & LCase$(RTrim$(f.Info)) & " from SolidCraft." & vbCrLf & vbCrLf & _
+            "Requires SolidCraft 2000.", vbInformation, App.Title
+        Exit Function
 
     Case FK_HOLE
         b = d.Features(f.Ref)

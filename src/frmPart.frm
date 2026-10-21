@@ -100,8 +100,8 @@ Private Sub Form_Load()
         .Add , , "#", 500
         .Add , , "Feature", 1600
         .Add , , "Type", 1800
-        .Add , , "Parameters", 4200
-        .Add , , "Status", 1300
+        .Add , , "Parameters", 3700
+        .Add , , "Status", 2100
     End With
 End Sub
 
@@ -168,7 +168,10 @@ Private Sub FillTimeline()
         li.SubItems(1) = FeatureName(Docs(DocIndex), i)
         li.SubItems(2) = KindName(Docs(DocIndex).Features(i).Kind)
         li.SubItems(3) = Describe(Docs(DocIndex), i)
-        If RefOk(Docs(DocIndex), i) Then
+        If Docs(DocIndex).Features(i).Kind = FK_FOREIGN Then
+            li.SubItems(2) = RTrim$(Docs(DocIndex).Features(i).Info)
+            li.SubItems(4) = "Requires SolidCraft 2000"
+        ElseIf RefOk(Docs(DocIndex), i) Then
             li.SubItems(4) = "OK"
         Else
             li.SubItems(4) = "Rebuild error"

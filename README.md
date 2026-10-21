@@ -18,7 +18,8 @@ choose More info, then Run anyway.
 
 ## What it can't do yet
 
-- Export. Parts only save as `.sc98`, which nothing else reads.
+- Export. Parts only save as `.sc98`, which nothing else reads. (It can open
+  SolidCraft designs, though: see below.)
 - Shading. It's wireframe, one `Line` at a time.
 - Sketches are rectangles and circles, flat, facing up. Revolve turns them
   about the Y axis. Holes go straight down from a top face.
@@ -42,7 +43,7 @@ choose More info, then Run anyway.
 - Holes go into the top of any extrude. "Through all" goes through
   everything stacked underneath.
 - Save and Open use `Put` and `Get` on a single `Type`. Open a file from a
-  newer version and you're told so. Files from version 3 are converted.
+  newer version and you're told so. Files from versions 3 and 4 are converted.
 - Number boxes go through `CDbl` with no validation, so typing `20mm` gets you
   a genuine `Run-time error '13': Type mismatch`. It's caught and shown, not
   a crash.
@@ -82,6 +83,29 @@ Tips:
   selected extrude too.
 - Number boxes do arithmetic: 80/2, 25+3.5. They don't do units, and
   they'll tell you so.
+
+## Opening SolidCraft designs
+
+File > Open also takes a design from SolidCraft itself (`.solidcraft`, or a
+plain-JSON design). SolidCraft 98 reads the design's feature history and
+rebuilds what it can:
+
+| In SolidCraft | In SolidCraft 98 |
+|---|---|
+| A sketch on the XY plane, or on a flat face that points up, of rectangles (plain or rounded) and circles | Sketches; one on a face sits on the extrude under it |
+| Extrude, new or join, in either direction or symmetric | Extrude |
+| Circles inside an extruded outline | Holes through that extrude |
+| A cut extrude of circles into a top face | Holes |
+| A simple or drilled hole, straight down | Hole |
+| Revolve about the sketch's Y axis | Revolve |
+
+Anything else (fillets, chamfers, patterns, sketches on side planes...) stays
+in the timeline with the status "Requires SolidCraft 2000", and the part opens
+with what's left. A feature comes over whole or not at all: if part of it
+can't be rebuilt exactly, all of it waits for SolidCraft 2000.
+
+The design is read, not changed. Save writes a new `.sc98`. Try the three
+`.solidcraft` files in `samples/`.
 
 ## The Turbo button
 
@@ -164,6 +188,8 @@ drawn at startup.
 | `modView.bas` | Projection, orbit, drawing |
 | `modBars.bas` | The toolbar and status bar, drawn in PictureBoxes |
 | `modIcons.bas` | Toolbar icons as 16x16 text pixel art |
+| `modImport.bas` | Opening SolidCraft designs |
+| `modZip.bas`, `modJson.bas` | A ZIP reader with its own Deflate decoder, and a JSON parser |
 | `modClassic.bas` | Keeps the classic look on modern Windows; coloured text |
 | `modTurbo.bas` | The Turbo button and the 1999 behaviour behind it |
 | `modExpr.bas` | Arithmetic in number boxes |
