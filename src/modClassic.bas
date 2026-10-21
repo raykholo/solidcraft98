@@ -14,9 +14,13 @@ Private Declare Function SendMessage Lib "user32" Alias "SendMessageA" (ByVal hW
 Private Declare Function SetTextColor Lib "gdi32" (ByVal hdc As Long, ByVal crColor As Long) As Long
 Private Declare Function SetBkMode Lib "gdi32" (ByVal hdc As Long, ByVal nBkMode As Long) As Long
 Private Declare Function TextOut Lib "gdi32" Alias "TextOutA" (ByVal hdc As Long, ByVal x As Long, ByVal y As Long, ByVal lpString As String, ByVal nCount As Long) As Long
+Private Declare Function RedrawWindow Lib "user32" (ByVal hWnd As Long, ByVal lprcUpdate As Long, ByVal hrgnUpdate As Long, ByVal fuRedraw As Long) As Long
 
 Private Const LVM_GETHEADER As Long = &H101F
 Private Const BK_TRANSPARENT As Long = 1
+Private Const RDW_INVALIDATE As Long = &H1
+Private Const RDW_ERASE As Long = &H4
+Private Const RDW_UPDATENOW As Long = &H100
 
 Private mBlank As String
 
@@ -29,6 +33,15 @@ Public Sub ClassicLook(ByVal frm As Object)
         Unthemed c.hWnd
         If TypeOf c Is ListView Then Unthemed SendMessage(c.hWnd, LVM_GETHEADER, 0, 0)
     Next c
+End Sub
+
+' A list view's column headers lose the first letter or two of each title
+' when its window comes to the front from behind another; paint them again.
+Public Sub RepaintHeaders(ByVal lvw As Object)
+    Dim h As Long
+    On Error Resume Next
+    h = SendMessage(lvw.hWnd, LVM_GETHEADER, 0, 0)
+    If h <> 0 Then RedrawWindow h, 0, 0, RDW_INVALIDATE Or RDW_ERASE Or RDW_UPDATENOW
 End Sub
 
 Private Sub Unthemed(ByVal hWnd As Long)

@@ -249,6 +249,7 @@ End Sub
 
 Private Sub Form_Activate()
     frmMain.SetFps ""
+    RepaintHeaders lvwTimeline
 End Sub
 
 Private Sub Form_Resize()
