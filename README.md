@@ -1,16 +1,42 @@
 # SolidCraft 98
 
-A parametric CAD program written the way it would have been written in 1999:
-in Visual Basic, with an MDI window, a `TreeView`, a `ListView` in Report mode
-and a wireframe viewport drawn with `Line`, one edge at a time.
+> **INTRODUCING SOLIDCRAFT 98 PROFESSIONAL EDITION.** Parametric solid
+> modelling comes to the desktop PC! Sketch it, extrude it, drill it, and
+> change your mind afterwards: every feature is fully editable, and
+> everything built on it follows. A true 32-bit Windows application with a
+> genuine Multiple Document Interface, a 16-colour toolbar, real-time*
+> wireframe graphics and a Turbo button. Runs in 16 MB of RAM**. Fits on
+> two floppy disks***.
+>
+> <sub>\* about 12 frames a second. \*\* untested. \*\*\* one, if
+> they're 2.88 MB. We don't talk about that.</sub>
+
+![SolidCraft 98 on Windows 11, showing the Mounting Plate sample](docs/screenshots/windows11-mounting-plate.png)
+
+SolidCraft 98 is a parametric CAD program written the way it would have
+been written in 1999: in Visual Basic, with an MDI window, a `TreeView`, a
+`ListView` in Report mode, and a wireframe viewport drawn with `Line`, one
+edge at a time.
 
 It's a joke, but it works. You can sketch, extrude, revolve, drill holes,
-put features on top of other features, change any of them later, and save
-the part to a file nobody else can read.
+put features on top of other features, change any of them later, open
+designs from SolidCraft itself, and save the part to a file nobody else can
+read.
+
+> **SolidCraft 98 is a parody.** It is not affiliated with, endorsed by, or a
+> replacement for SolidCraft, and it shares no code with it.
+
+![SolidCraft 98 on ReactOS, opening a design made in SolidCraft](docs/screenshots/reactos-opens-a-solidcraft-design.png)
+
+<sub>On ReactOS with the Classic theme, at 800 x 600: a design made in
+SolidCraft, rebuilt in SolidCraft 98. The fillet is waiting for SolidCraft
+2000.</sub>
 
 ## Getting it
 
-Download `SolidCraft98-1.0.zip` from the Releases page, unzip it anywhere,
+Download `SolidCraft98-1.0.zip` from the
+[Releases page](../../releases), check its SHA-256 against the one listed
+there if you like, unzip it anywhere,
 and run `SolidCraft98.exe`. There's no installer and nothing to register:
 one EXE, which is very un-1999 of it. It runs on Windows 10 and 11 and on
 ReactOS. The EXE isn't signed, so Windows may say it "protected your PC":
@@ -48,6 +74,8 @@ choose More info, then Run anyway.
   a genuine `Run-time error '13': Type mismatch`. It's caught and shown, not
   a crash.
 - An About box and a splash screen, both drawn in code.
+
+![The splash screen](docs/screenshots/splash.png)
 
 ## Design your first part
 
@@ -107,7 +135,17 @@ can't be rebuilt exactly, all of it waits for SolidCraft 2000.
 The design is read, not changed. Save writes a new `.sc98`. Try the three
 `.solidcraft` files in `samples/`.
 
-## The Turbo button
+![Opening a SolidCraft design: what was left out, and why](docs/screenshots/reactos-requires-solidcraft-2000.png)
+
+## Turbo
+
+The toolbar has a Turbo button, with an LED next to it. It doesn't do what
+you'd hope.
+
+<details>
+<summary>Turbo, and the other things in here (spoilers)</summary>
+
+![The Turbo LED: 66 MHz, then 33 MHz with Turbo on](docs/screenshots/turbo-led.png)
 
 Like the button on the front of a 1990s PC, except backwards. The LED next to
 it reads 66 MHz normally and 33 MHz with Turbo on, and Turbo switches on the
@@ -144,6 +182,14 @@ Either way:
 
 Every one of these is only drawn on screen. Nothing touches system files,
 the clock or a disk drive, and no design is ever lost.
+
+![A fatal exception, when dividing by zero with Turbo on](docs/screenshots/turbo-fatal-exception.png)
+
+![Copying a part to a floppy that doesn't exist](docs/screenshots/turbo-floppy.png)
+
+![A part, published to the World Wide Web](docs/screenshots/turbo-publish-to-web.png)
+
+</details>
 
 ## Keys
 
@@ -200,25 +246,40 @@ The toolbar and status bar are drawn by hand rather than taken from
 MSCOMCTL.OCX, because that OCX doesn't ship with current Windows. The
 TreeView and ListView are the MSCOMCTL ones as far as VB6 is concerned.
 
-## Building
+## Building from source
 
-It builds with [twinBASIC](https://twinbasic.com), from the command line:
+The source is the VB6 project, `src/SolidCraft98.vbp`. Two ways to build it:
 
-```
-python3 tools/vb2tb.py src/SolidCraft98.vbp build/src
-python3 tools/impexp.py import build/SolidCraft98.twinproj build/src --overwrite
-twinBASIC.exe build\SolidCraft98.twinproj --buildAndExit32
-```
+**With twinBASIC** (free, and what the release is built with):
+
+1. Install [twinBASIC](https://twinbasic.com) on Windows, and Python 3 on any
+   machine.
+2. Convert the VB6 project to a twinBASIC source folder, and pack it:
+
+   ```
+   python3 tools/vb2tb.py src/SolidCraft98.vbp build/src
+   python3 tools/impexp.py import build/SolidCraft98.twinproj build/src --overwrite
+   ```
+
+3. Build it, 32-bit:
+
+   ```
+   twinBASIC.exe build\SolidCraft98.twinproj --buildAndExit32
+   ```
+
+   The EXE lands in `build\Build\SolidCraft98.exe`, with the manifest and
+   the icon built in. If the build hits a compile error the IDE stays open
+   in the background: open the `.twinproj` in the IDE to see the errors.
 
 `vb2tb.py` does what twinBASIC's own VBP import does, without the IDE: it
 turns each `.frm` into twinBASIC's form format, converts twips to pixels,
 maps the MSCOMCTL TreeView and ListView onto twinBASIC's built-in common
 controls, and embeds the manifest and the icon. `impexp.py` is twinBASIC's
-own MIT-licensed import/export tool, which packs the folder into a project.
-The EXE lands in `build/Build/`.
+own MIT-licensed import/export tool.
 
-A VB6 IDE should open `SolidCraft98.vbp` as it is. Put
-`SolidCraft98.exe.manifest` next to the EXE you make.
+**With Visual Basic 6**, if you have it: open `src/SolidCraft98.vbp`,
+File > Make SolidCraft98.exe, and put `SolidCraft98.exe.manifest` next to
+the EXE. (Untested: VB6 isn't something you can download any more.)
 
 ## Where it runs
 
@@ -236,3 +297,11 @@ small for the window it starts maximised.
 | `tools/impexp.py` | twinBASIC's project packer (MIT, unchanged) |
 | `tools/pixpng.py` | Renders the icons in `modIcons.bas` to a PNG |
 | `tools/mkico.py` | Makes `SolidCraft98.ico` from the "App" icon |
+
+## Licence
+
+MIT. See [LICENSE](LICENSE) and [NOTICE](NOTICE). The EXE is compiled with
+twinBASIC, which is not part of this project.
+
+SolidCraft 98 is a parody, and not affiliated with or a replacement for
+SolidCraft.

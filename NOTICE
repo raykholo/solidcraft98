@@ -1,6 +1,12 @@
 SolidCraft 98
-Copyright 2026 The SolidCraft 98 authors
+Copyright (c) 2026 SolidCraft 98 contributors. MIT License (see LICENSE).
 
-This product includes tools/impexp.py from twinBASIC (https://twinbasic.com),
-Copyright (c) 2026 TWINBASIC LTD, used under the MIT License (see the
-header of that file).
+SolidCraft98.exe is compiled with twinBASIC (https://twinbasic.com), by
+TWINBASIC LTD. twinBASIC is not part of this project and is not distributed
+with it.
+
+tools/impexp.py is twinBASIC's import/export tool, Copyright (c) 2026
+TWINBASIC LTD, used under the MIT License (see the header of that file).
+
+SolidCraft 98 is a parody. It is not affiliated with, endorsed by, or a
+replacement for SolidCraft.
