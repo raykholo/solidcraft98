@@ -132,7 +132,8 @@ Private Sub CmdSave(ByVal bAs As Boolean)
         sPath = frmMain.AskFileName(True, RTrim$(Docs(slot).Title))
         If Len(sPath) = 0 Then Exit Sub
     End If
-    If UCase$(Left$(sPath, 3)) = "A:\" Then
+    ' A:\ with no floppy drive is the pretend floppy; a real A: is just a drive
+    If UCase$(Left$(sPath, 3)) = "A:\" And Not FolderExists("A:\") Then
         FloppySave p, Mid$(sPath, 4)
         Exit Sub
     End If
@@ -157,6 +158,17 @@ Private Sub FloppySave(p As frmPart, ByVal sName As String)
     Dim slot As Integer, sReal As String, nBytes As Double
     Const PREVIEW_BYTES As Double = 3686454   ' a 1280 x 960 24-bit BMP, "for faster opening"
     slot = p.DocIndex
+    If FolderExists("A:\") Then
+        ' a real floppy drive, in this day and age: save to it
+        sReal = "A:\" & FileTitle(sName) & "." & PART_EXT
+        If Not SaveDesign(Docs(slot), sReal) Then Exit Sub
+        DocPath(slot) = sReal
+        Docs(slot).Title = FileTitle(sReal)
+        DocDirty(slot) = False
+        p.RefreshAll False
+        Status "Saved " & sReal & " (" & FileLen(sReal) & " bytes). Remember to label the disk."
+        Exit Sub
+    End If
     If Not Turbo Then
         MsgBox "There is no drive A: on this PC." & vbCrLf & vbCrLf & _
             "Use File, Save As to save the part to the hard disk.", vbExclamation, App.Title
@@ -184,11 +196,11 @@ End Sub
 Private Function SafeDocumentsPath(ByVal sName As String) As String
     Dim sDir As String, sBase As String, n As Integer
     sDir = Environ$("USERPROFILE") & "\Documents\"
-    If Len(Dir$(sDir, vbDirectory)) = 0 Then sDir = App.Path & "\"
+    If Not FolderExists(sDir) Then sDir = App.Path & "\"
     sBase = FileTitle(sName)
     SafeDocumentsPath = sDir & sBase & "." & PART_EXT
     n = 1
-    Do While Len(Dir$(SafeDocumentsPath)) > 0
+    Do While FileExists(SafeDocumentsPath)
         n = n + 1
         SafeDocumentsPath = sDir & sBase & " (" & n & ")." & PART_EXT
     Loop

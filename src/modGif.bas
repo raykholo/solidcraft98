@@ -75,7 +75,7 @@ Public Sub GifSave(ByVal sPath As String)
     PutByte &H3B             ' trailer
     ReDim out(0 To mLen - 1)
     CopyBytes out, mLen
-    If Len(Dir$(sPath)) > 0 Then Kill sPath
+    If FileExists(sPath) Then Kill sPath
     fh = FreeFile
     Open sPath For Binary Access Write As #fh
     Put #fh, 1, out

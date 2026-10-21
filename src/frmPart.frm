@@ -8,6 +8,7 @@ Begin VB.Form frmPart
    ClientWidth     =   9000
    KeyPreview      =   -1  'True
    LinkTopic       =   "Form1"
+   MaxButton       =   0   'False
    MDIChild        =   -1  'True
    Begin MSComctlLib.TreeView tvwTree
       Height          =   4200
@@ -85,11 +86,17 @@ Public Sub Attach(ByVal slot As Integer)
     Dim n As Integer, i As Integer
     DocIndex = slot
     ResetView mView
-    ' cascade each new part a little, like Window > Cascade would
+    ' The first part fills the frame. (Not maximised: a maximised MDI child
+    ' loses the menus under twinBASIC, so there's no Maximize button.)
+    ' Later ones cascade, like Window > Cascade would.
     For i = 1 To MAX_DOCS
         If DocInUse(i) And i <> slot Then n = n + 1
     Next i
-    Move n * 360, n * 360, frmMain.ScaleWidth * 0.85, frmMain.ScaleHeight * 0.85
+    If n = 0 Then
+        Move 0, 0, frmMain.ScaleWidth, frmMain.ScaleHeight
+    Else
+        Move n * 360, n * 360, frmMain.ScaleWidth * 0.85, frmMain.ScaleHeight * 0.85
+    End If
     RefreshAll True
 End Sub
 

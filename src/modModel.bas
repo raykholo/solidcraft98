@@ -257,20 +257,30 @@ End Function
 ' ---- Save and Open: Put and Get, straight from the Type ----
 
 Public Function SaveDesign(d As TDesign, ByVal sPath As String) As Boolean
-    Dim fh As Integer
+    Dim fh As Integer, sStep As String, bOpen As Boolean
     On Error GoTo Failed
     d.Magic = FILE_MAGIC
     d.Version = FILE_VERSION
-    If Len(Dir$(sPath)) > 0 Then Kill sPath
+    sStep = "replacing the old file"
+    If FileExists(sPath) Then Kill sPath
+    sStep = "creating the file"
     fh = FreeFile
     Open sPath For Binary Access Write As #fh
+    bOpen = True
+    sStep = "writing the part"
     Put #fh, 1, d
+    sStep = "closing the file"
     Close #fh
+    bOpen = False
     SaveDesign = True
     Exit Function
 Failed:
-    If fh <> 0 Then Close #fh
-    MsgBox "Run-time error '" & Err.Number & "':" & vbCrLf & vbCrLf & Err.Description, vbCritical, App.Title
+    MsgBox "Run-time error '" & Err.Number & "':" & vbCrLf & vbCrLf & Err.Description & vbCrLf & vbCrLf & _
+        "(While " & sStep & ": " & sPath & ")", vbCritical, App.Title
+    If bOpen Then
+        On Error Resume Next
+        Close #fh
+    End If
 End Function
 
 Public Function LoadDesign(d As TDesign, ByVal sPath As String) As Boolean
