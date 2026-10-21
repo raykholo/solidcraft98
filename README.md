@@ -47,7 +47,7 @@ choose More info, then Run anyway.
 
 Or on a floppy, as was intended: each release also has a 1.44 MB disk image
 (`SolidCraft98-<version>-floppy.img`) with the EXE packed by UPX to about
-520 KB, so it all fits on one disk. Write it to a disk (or attach it to a
+530 KB, so it all fits on one disk. Write it to a disk (or attach it to a
 virtual machine) and run `A:\SC98.EXE`.
 
 ## What it can't do yet
