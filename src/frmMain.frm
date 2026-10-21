@@ -232,6 +232,8 @@ Private Declare Function GetWindowRect Lib "user32" (ByVal hWnd As Long, lpRect 
 Private mLastMsg As String
 
 Private Sub MDIForm_Load()
+    ' On an 800 x 600 screen the frame doesn't fit, so take the whole screen.
+    If Width > Screen.Width * 0.95 Or Height > Screen.Height * 0.9 Then WindowState = vbMaximized
     ' single-key shortcuts, shown the way the menu editor can't
     mnuSketchItem(0).Caption = "&Rectangle..." & vbTab & "R"
     mnuSketchItem(1).Caption = "&Circle..." & vbTab & "C"

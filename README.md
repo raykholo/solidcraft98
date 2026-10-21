@@ -134,6 +134,14 @@ The EXE lands in `build/Build/`.
 A VB6 IDE should open `SolidCraft98.vbp` as it is. Put
 `SolidCraft98.exe.manifest` next to the EXE you make.
 
+## Where it runs
+
+Windows 11, where it was built and tested, and ReactOS 0.4.16, the free
+NT-compatible operating system. On ReactOS, with the Classic theme at
+800x600, it looks the way it was always meant to: grey 3D chrome and blue
+gradient title bars. The same `.sc98` files open on both. On a screen too
+small for the window it starts maximised.
+
 ## Tools
 
 | Tool | What it does |
