@@ -91,7 +91,6 @@ Private Const GAP As Single = 60
 
 Public Sub Attach(ByVal slot As Integer)
     Dim n As Integer, i As Integer
-    DocIndex = slot
     ResetView mView
     ' The first part fills the frame. (Not maximised: a maximised MDI child
     ' loses the menus under twinBASIC, so there's no Maximize button.)
@@ -104,6 +103,7 @@ Public Sub Attach(ByVal slot As Integer)
     Else
         Move n * 360, n * 360, frmMain.ScaleWidth * 0.85, frmMain.ScaleHeight * 0.85
     End If
+    DocIndex = slot          ' only now, so the Move above doesn't draw (or shade) the part unfitted
     RefreshAll True
 End Sub
 
@@ -128,6 +128,15 @@ Private Sub ColumnTitles()
             If lvwTimeline.ColumnHeaders(i + 1).Text <> t(i) Then lvwTimeline.ColumnHeaders(i + 1).Text = t(i)
         End If
     Next i
+End Sub
+
+' After a save: the title may have changed, the shape hasn't, so the
+' picture (which may have taken seconds to shade) stays.
+Public Sub RefreshNames()
+    If DocIndex = 0 Then Exit Sub
+    Caption = DocTitle(DocIndex)
+    FillTree
+    FillTimeline
 End Sub
 
 ' Rebuilds the tree, the timeline and the picture from the design.
@@ -261,6 +270,7 @@ Private Sub Form_Resize()
     tvwTree.Move 0, 0, treeW, h - tlH - GAP
     picView.Move treeW + GAP, 0, w - treeW - GAP, h - tlH - GAP
     lvwTimeline.Move 0, h - tlH, w, tlH
+    Me.Refresh               ' the gaps between them, which ReactOS leaves as they were
     ColumnTitles
     If DocIndex <> 0 Then Redraw
 End Sub

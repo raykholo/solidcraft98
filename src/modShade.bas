@@ -133,7 +133,7 @@ Public Function RenderShaded(ByVal slot As Integer, v As TView, pic As PictureBo
     Dim i As Long, x As Long, y As Long, p As Long, q As Long, c As Long
     Dim nx As Double, ny As Double, nz As Double, k As Double
     Dim x1 As Double, y1 As Double, d1 As Double, x2 As Double, y2 As Double, d2 As Double, x3 As Double, y3 As Double, d3 As Double
-    Dim t0 As Long, total As Long, due As Long, sWhat As String
+    Dim t0 As Long, total As Long, due As Long, sWhat As String, band As BITMAPINFO
 
     ShadeGen(slot) = ShadeGen(slot) + 1
     gen = ShadeGen(slot)
@@ -204,7 +204,11 @@ Public Function RenderShaded(ByVal slot As Integer, v As TView, pic As PictureBo
         If ShadeGen(slot) <> gen Then Exit Function
         x = BAND_ROWS
         If y + x > h Then x = h - y
-        SetDIBitsToDevice pic.hDC, 0, y, w, x, 0, h - (y + x), 0, h, px(0), bmi, 0
+        ' a band's rows are one run of the bottom-up picture: hand over just
+        ' those, as a picture of their own (some systems get the offsets wrong)
+        band = bmi
+        band.bmiHeader.biHeight = x
+        SetDIBitsToDevice pic.hDC, 0, y, w, x, 0, 0, 0, x, px((h - y - x) * w), band, 0
         pic.Refresh
         frmMain.SetStatus sWhat & "... " & Int(100 * (y + x) / h) & "%"
         due = t0 + total * (y + x) / h

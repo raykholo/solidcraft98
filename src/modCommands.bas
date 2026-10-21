@@ -143,7 +143,7 @@ Private Sub CmdSave(ByVal bAs As Boolean)
         DocPath(slot) = sPath
         Docs(slot).Title = FileTitle(sPath)
         DocDirty(slot) = False
-        p.RefreshAll False
+        p.RefreshNames
         Status "Saved " & sPath & " (" & FileLen(sPath) & " bytes)"
     End If
 End Sub
@@ -167,7 +167,7 @@ Private Sub FloppySave(p As frmPart, ByVal sName As String)
         DocPath(slot) = sReal
         Docs(slot).Title = FileTitle(sReal)
         DocDirty(slot) = False
-        p.RefreshAll False
+        p.RefreshNames
         Status "Saved " & sReal & " (" & FileLen(sReal) & " bytes). Remember to label the disk."
         Exit Sub
     End If
@@ -182,7 +182,7 @@ Private Sub FloppySave(p As frmPart, ByVal sName As String)
     DocPath(slot) = sReal
     Docs(slot).Title = FileTitle(sReal)
     DocDirty(slot) = False
-    p.RefreshAll False
+    p.RefreshNames
     nBytes = FileLen(sReal) + PREVIEW_BYTES
     If frmFloppy.Run(FileTitle(sReal) & "." & PART_EXT, nBytes) Then
         MsgBox "Copied " & Format$(nBytes, "#,##0") & " bytes to " & (-Int(-nBytes / FLOPPY_BYTES)) & " disks." & vbCrLf & vbCrLf & _
