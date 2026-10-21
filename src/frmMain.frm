@@ -1,63 +1,47 @@
 VERSION 5.00
-Object = "{831FDD16-0C5C-11D2-A9FC-0000F8754DA1}#2.0#0"; "MSCOMCTL.OCX"
 Begin VB.MDIForm frmMain
    BackColor       =   &H8000000C&
    Caption         =   "SolidCraft 98"
-   ClientHeight    =   8400
+   ClientHeight    =   9600
    ClientLeft      =   165
    ClientTop       =   855
-   ClientWidth     =   12000
+   ClientWidth     =   14400
    LinkTopic       =   "MDIForm1"
    StartUpPosition =   2  'CenterScreen
-   Begin VB.PictureBox picIcon
+   Begin VB.Timer tmrHover
+      Interval        =   100
+      Left            =   120
+      Top             =   1200
+   End
+   Begin VB.PictureBox picToolbar
       Align           =   1  'Align Top
       AutoRedraw      =   -1  'True
+      BackColor       =   &H00C0C0C0&
       BorderStyle     =   0  'None
-      Height          =   240
+      Height          =   450
       Left            =   0
-      ScaleHeight     =   16
+      ScaleHeight     =   30
       ScaleMode       =   3  'Pixel
       ScaleWidth      =   800
-      TabIndex        =   2
-      Top             =   0
-      Visible         =   0   'False
-      Width           =   12000
-   End
-   Begin MSComctlLib.Toolbar tbMain
-      Align           =   1  'Align Top
-      Height          =   420
-      Left            =   0
       TabIndex        =   0
-      Top             =   240
+      TabStop         =   0   'False
+      Top             =   0
       Width           =   12000
-      _ExtentX        =   21167
-      _ExtentY        =   741
-      ButtonWidth     =   609
-      ButtonHeight    =   582
-      Appearance      =   1
-      _Version        =   393216
    End
-   Begin MSComctlLib.StatusBar sbMain
+   Begin VB.PictureBox picStatus
       Align           =   2  'Align Bottom
-      Height          =   315
+      AutoRedraw      =   -1  'True
+      BackColor       =   &H00C0C0C0&
+      BorderStyle     =   0  'None
+      Height          =   330
       Left            =   0
+      ScaleHeight     =   22
+      ScaleMode       =   3  'Pixel
+      ScaleWidth      =   800
       TabIndex        =   1
-      Top             =   8085
+      TabStop         =   0   'False
+      Top             =   8070
       Width           =   12000
-      _ExtentX        =   21167
-      _ExtentY        =   556
-      _Version        =   393216
-   End
-   Begin MSComctlLib.ImageList ilTools
-      Left            =   120
-      Top             =   720
-      _ExtentX        =   1005
-      _ExtentY        =   1005
-      BackColor       =   -2147483643
-      ImageWidth      =   16
-      ImageHeight     =   16
-      MaskColor       =   16711935
-      _Version        =   393216
    End
    Begin VB.Menu mnuFile
       Caption         =   "&File"
@@ -202,77 +186,121 @@ Attribute VB_Creatable = False
 Attribute VB_PredeclaredId = True
 Attribute VB_Exposed = False
 ' frmMain - the battleship-grey MDI frame: menus, toolbar, status bar.
-' Every menu item and toolbar button carries a command key in its Tag or
-' Key and hands it to RunCommand. Nothing else happens in here.
+' Every menu item and toolbar button carries a command key (in its Tag, or
+' its toolbar key) and hands it to RunCommand. Nothing else happens here.
 Option Explicit
 
+Private Type POINTAPI
+    X As Long
+    Y As Long
+End Type
+
+Private Type RECT
+    Left As Long
+    Top As Long
+    Right As Long
+    Bottom As Long
+End Type
+
+Private Declare Function GetCursorPos Lib "user32" (lpPoint As POINTAPI) As Long
+Private Declare Function GetWindowRect Lib "user32" (ByVal hWnd As Long, lpRect As RECT) As Long
+
+Private mLastMsg As String
+
 Private Sub MDIForm_Load()
+    ' single-key shortcuts, shown the way the menu editor can't
+    mnuSketchItem(0).Caption = "&Rectangle..." & vbTab & "R"
+    mnuSketchItem(1).Caption = "&Circle..." & vbTab & "C"
+    mnuFeatureItem(0).Caption = "&Extrude..." & vbTab & "E"
+    mnuFeatureItem(1).Caption = "Re&volve..." & vbTab & "V"
+    mnuFeatureItem(2).Caption = "&Hole..." & vbTab & "H"
+    mnuViewItem(0).Caption = "&Isometric" & vbTab & "I"
+    mnuViewItem(1).Caption = "Zoom to &Fit" & vbTab & "F"
     BuildToolbar
     BuildStatusBar
+    ToolbarDraw picToolbar
+    StatusDraw picStatus
     SetStatus "Ready"
 End Sub
 
 Private Sub BuildToolbar()
-    Dim keys() As String, i As Integer, img As ListImage
-    keys = Split(IconKeys(), " ")
-    picIcon.Width = ScaleX(16, vbPixels, ScaleMode)
-    picIcon.Height = ScaleY(16, vbPixels, ScaleMode)
-    For i = 0 To UBound(keys)
-        picIcon.Cls
-        PaintIcon picIcon, keys(i), 0, 0
-        Set img = ilTools.ListImages.Add(, keys(i), picIcon.Image)
-    Next i
-    Set tbMain.ImageList = ilTools
-
-    AddButton "New", "New Part (Ctrl+N)"
-    AddButton "Open", "Open (Ctrl+O)"
-    AddButton "Save", "Save (Ctrl+S)"
-    AddSeparator
-    AddButton "SketchRect", "Sketch Rectangle (R)"
-    AddButton "SketchCircle", "Sketch Circle (C)"
-    AddSeparator
-    AddButton "Extrude", "Extrude (E)"
-    AddButton "Revolve", "Revolve (V)"
-    AddButton "Hole", "Hole (H)"
-    AddSeparator
-    AddButton "Orbit", "Isometric (I). Drag in the viewport to orbit."
-    AddButton "ZoomFit", "Zoom to Fit (F)"
-    AddButton "Regen", "Regenerate (F5)"
-End Sub
-
-Private Sub AddButton(ByVal sKey As String, ByVal sTip As String)
-    Dim b As MSComctlLib.Button
-    Set b = tbMain.Buttons.Add(, sKey, , tbrDefault, sKey)
-    b.ToolTipText = sTip
-End Sub
-
-Private Sub AddSeparator()
-    tbMain.Buttons.Add , , , tbrSeparator
+    ToolbarClear
+    ToolbarAdd "New", "New Part (Ctrl+N)"
+    ToolbarAdd "Open", "Open Part (Ctrl+O)"
+    ToolbarAdd "Save", "Save Part (Ctrl+S)"
+    ToolbarAdd "", ""
+    ToolbarAdd "SketchRect", "Sketch Rectangle (R)"
+    ToolbarAdd "SketchCircle", "Sketch Circle (C)"
+    ToolbarAdd "", ""
+    ToolbarAdd "Extrude", "Extrude (E)"
+    ToolbarAdd "Revolve", "Revolve (V)"
+    ToolbarAdd "Hole", "Hole (H)"
+    ToolbarAdd "", ""
+    ToolbarAdd "Orbit", "Isometric View (I). Drag in the viewport to orbit."
+    ToolbarAdd "ZoomFit", "Zoom to Fit (F)"
+    ToolbarAdd "Regen", "Regenerate (F5)"
 End Sub
 
 Private Sub BuildStatusBar()
-    Dim p As MSComctlLib.Panel
-    sbMain.Panels.Clear
-    Set p = sbMain.Panels.Add(, "msg", "Ready")
-    p.AutoSize = sbrSpring
-    Set p = sbMain.Panels.Add(, "units", "mm")
-    p.AutoSize = sbrContents
-    p.MinWidth = 600
-    Set p = sbMain.Panels.Add(, "fps", "")
-    p.AutoSize = sbrContents
-    p.MinWidth = 1200
+    StatusClear
+    StatusAdd "msg", "Ready", 0
+    StatusAdd "units", "mm", 40
+    StatusAdd "fps", "", 110
 End Sub
 
 Public Sub SetStatus(ByVal s As String)
-    sbMain.Panels("msg").Text = s
+    mLastMsg = s
+    StatusSet picStatus, "msg", s
 End Sub
 
 Public Sub SetFps(ByVal s As String)
-    sbMain.Panels("fps").Text = s
+    StatusSet picStatus, "fps", s
 End Sub
 
-Private Sub tbMain_ButtonClick(ByVal Button As MSComctlLib.Button)
-    RunCommand Button.Key
+' Open and Save As dialogs. Returns "" on Cancel.
+Public Function AskFileName(ByVal bSave As Boolean, ByVal sDefault As String) As String
+    AskFileName = FileDialog(Me.hWnd, bSave, sDefault)
+End Function
+
+Private Sub picToolbar_Resize()
+    ToolbarDraw picToolbar
+End Sub
+
+Private Sub picStatus_Resize()
+    StatusDraw picStatus
+End Sub
+
+Private Sub picToolbar_MouseMove(Button As Integer, Shift As Integer, X As Single, Y As Single)
+    Dim sTip As String
+    sTip = ToolbarMouseMove(picToolbar, X, Y)
+    If picToolbar.ToolTipText <> sTip Then picToolbar.ToolTipText = sTip
+    If Len(sTip) > 0 Then
+        StatusSet picStatus, "msg", sTip
+    Else
+        StatusSet picStatus, "msg", mLastMsg
+    End If
+End Sub
+
+Private Sub picToolbar_MouseDown(Button As Integer, Shift As Integer, X As Single, Y As Single)
+    If Button = vbLeftButton Then ToolbarMouseDown picToolbar, X, Y
+End Sub
+
+Private Sub picToolbar_MouseUp(Button As Integer, Shift As Integer, X As Single, Y As Single)
+    Dim sKey As String
+    If Button <> vbLeftButton Then Exit Sub
+    sKey = ToolbarMouseUp(picToolbar, X, Y)
+    If Len(sKey) > 0 Then RunCommand sKey
+End Sub
+
+' VB has no MouseLeave, so a Timer checks whether the mouse is still there.
+Private Sub tmrHover_Timer()
+    Dim pt As POINTAPI, rc As RECT
+    GetCursorPos pt
+    GetWindowRect picToolbar.hWnd, rc
+    If pt.X < rc.Left Or pt.X >= rc.Right Or pt.Y < rc.Top Or pt.Y >= rc.Bottom Then
+        ToolbarMouseLeave picToolbar
+        StatusSet picStatus, "msg", mLastMsg
+    End If
 End Sub
 
 Private Sub mnuFileItem_Click(Index As Integer)
@@ -302,11 +330,6 @@ End Sub
 Private Sub mnuHelpItem_Click(Index As Integer)
     RunCommand mnuHelpItem(Index).Tag
 End Sub
-
-' Open and Save As dialogs. Returns "" on Cancel.
-Public Function AskFileName(ByVal bSave As Boolean, ByVal sDefault As String) As String
-    AskFileName = FileDialog(Me.hWnd, bSave, sDefault)
-End Function
 
 Private Sub MDIForm_QueryUnload(Cancel As Integer, UnloadMode As Integer)
     Dim i As Integer, n As Integer

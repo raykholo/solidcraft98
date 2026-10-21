@@ -124,6 +124,10 @@ Private mCount As Integer
 Private mValues(0 To 3) As Double
 Private mOK As Boolean
 
+Private Sub Form_Load()
+    ClassicLook Me
+End Sub
+
 ' Shows the dialog. Prompts and defaults are "|"-separated. True if OK.
 Public Function Ask(ByVal sTitle As String, ByVal sPrompts As String, ByVal sDefaults As String) As Boolean
     Dim p() As String, d() As String, i As Integer
@@ -161,6 +165,12 @@ Private Sub Form_Activate()
     txtP(0).SetFocus
     txtP(0).SelStart = 0
     txtP(0).SelLength = Len(txtP(0).Text)
+End Sub
+
+' Tabbing into a box selects what's in it, so typing replaces it.
+Private Sub txtP_GotFocus(Index As Integer)
+    txtP(Index).SelStart = 0
+    txtP(Index).SelLength = Len(txtP(Index).Text)
 End Sub
 
 Private Sub cmdOK_Click()

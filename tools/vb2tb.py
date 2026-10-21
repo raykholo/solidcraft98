@@ -55,7 +55,15 @@ COMCTL_CLSID = {
 }
 COMCTL_OCX_GUID = "{831FDD16-0C5C-11D2-A9FC-0000F8754DA1}"
 
-TWIPS = {"Left", "Top", "Width", "Height", "X1", "X2", "Y1", "Y2"}
+# Menu shortcuts as a .frm writes them, in the order of twinBASIC's
+# ShortcutConstants (vbShortcutNone = 0, vbShortcutCtrlA = 1, ...). VB has no F10.
+_FKEYS = ["F1", "F2", "F3", "F4", "F5", "F6", "F7", "F8", "F9", "F11", "F12"]
+SHORTCUTS = (["^" + chr(c) for c in range(ord("A"), ord("Z") + 1)]
+             + ["{%s}" % f for f in _FKEYS] + ["+{%s}" % f for f in _FKEYS]
+             + ["^{%s}" % f for f in _FKEYS] + ["+^{%s}" % f for f in _FKEYS]
+             + ["^{INSERT}", "+{INSERT}", "{DEL}", "+{DEL}", "%{BKSP}"])
+
+TWIPS = {"Left", "Top", "Width", "Height", "X1", "X2", "Y1", "Y2", "Indentation"}
 DOCK = {1: "vbDockTop", 2: "vbDockBottom", 3: "vbDockLeft", 4: "vbDockRight"}
 DROP = {"_ExtentX", "_ExtentY", "_Version"}
 
@@ -88,6 +96,11 @@ REF_COMCTL = {
     "publisher": "TWINBASIC-COMPILER",
     "versionBuild": 0, "versionMajor": 0, "versionMinor": 0, "versionRevision": 1,
 }
+
+
+def strip_ocx_names(line):
+    """MSComctlLib.Node -> Node: the native controls aren't in a library namespace."""
+    return re.sub(r"\bMSComctlLib\.", "", line)
 
 
 def guid(*parts):
@@ -188,6 +201,8 @@ def convert_props(node, is_root, dock_order):
                 out["DockOrder"] = dock_order
             continue
         out[k] = v
+        if k == "Shortcut" and v in SHORTCUTS:
+            out["ShortcutId"] = SHORTCUTS.index(v) + 1     # the raw string isn't used at runtime
     if font:
         out["FontName"] = font.get("Name", "MS Sans Serif")
         out["FontSize"] = font.get("Size", 8.25)
@@ -259,7 +274,7 @@ def convert_form(path, outdir):
         f'[EventInterfaceId("{guid(name, "events")[1:-1]}")]',
         f"Class {name}",
     ]
-    twin += [("    " + ln) if ln.strip() else "" for ln in code]
+    twin += [("    " + strip_ocx_names(ln)) if ln.strip() else "" for ln in code]
     twin += ["", "End Class", ""]
     with open(os.path.join(outdir, base + ".twin"), "w", encoding="cp1252", newline="\r\n") as f:
         f.write("\n".join(twin))
@@ -302,8 +317,22 @@ def main():
             print(f"form    {rel} -> {name}")
         else:
             with open(os.path.join(sources, os.path.basename(rel)), "w", encoding="cp1252", newline="\r\n") as f:
-                f.write(read_text(src))
+                f.write("\n".join(strip_ocx_names(ln) for ln in read_text(src).split("\n")))
             print(f"{kind.lower():7} {rel}")
+
+    # VB6 reads <exe>.manifest from beside the EXE; twinBASIC embeds it as a resource.
+    manifest = os.path.join(srcdir, props.get("ExeName32", "") + ".manifest")
+    if os.path.isfile(manifest):
+        os.makedirs(os.path.join(outdir, "Resources", "MANIFEST"))
+        shutil.copy(manifest, os.path.join(outdir, "Resources", "MANIFEST", "#1.xml"))
+        print(f"manifest {os.path.basename(manifest)}")
+
+    # The EXE icon: <Name>.ico beside the .vbp (tools/mkico.py makes it from modIcons).
+    icon = os.path.join(srcdir, props.get("Name", "Project1") + ".ico")
+    if os.path.isfile(icon):
+        os.makedirs(os.path.join(outdir, "Resources", "ICON"))
+        shutil.copy(icon, os.path.join(outdir, "Resources", "ICON", os.path.basename(icon)))
+        print(f"icon     {os.path.basename(icon)}")
 
     name = props.get("Name", "Project1")
     refs = [REF_FORMS, REF_STDOLE] + ([REF_COMCTL] if uses_comctl else [])

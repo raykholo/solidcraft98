@@ -4,6 +4,7 @@ Option Explicit
 
 Sub Main()
     frmSplash.Show
+    frmSplash.Paint
     frmSplash.Refresh
     Load frmMain
     frmSplash.Progress "Loading geometry kernel..."

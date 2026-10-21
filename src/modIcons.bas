@@ -3,8 +3,8 @@ Attribute VB_Name = "modIcons"
 '
 ' Every icon is 16 rows of 16 characters. A hex digit is a QBColor index
 ' (the classic 16-colour palette), "." is see-through. PaintIcon draws one
-' into a PictureBox, so the ImageList gets filled at startup with no
-' binary files in the project. tools/pixpng.py renders a preview sheet.
+' into a PictureBox at startup, so the project has no binary files.
+' tools/pixpng.py renders a preview sheet.
 Option Explicit
 
 Public Const ICON_MASK As Long = &HFF00FF   ' magenta, never used in the art
@@ -21,14 +21,16 @@ Public Function IconKeys() As String
     IconKeys = "New Open Save SketchRect SketchCircle Extrude Revolve Hole Orbit ZoomFit Regen Turbo"
 End Function
 
-Public Sub PaintIcon(ByVal pic As PictureBox, ByVal sKey As String, ByVal x0 As Long, ByVal y0 As Long)
+' bTransparent skips the see-through pixels; otherwise they're painted ICON_MASK.
+Public Sub PaintIcon(ByVal pic As PictureBox, ByVal sKey As String, ByVal x0 As Long, ByVal y0 As Long, _
+                     Optional ByVal bTransparent As Boolean = False)
     Dim x As Long, y As Long, ch As String
     LoadRows sKey
     For y = 0 To 15
         For x = 0 To 15
             ch = Mid$(mRows(y), x + 1, 1)
             If ch = "." Or ch = "" Then
-                pic.PSet (x0 + x, y0 + y), ICON_MASK
+                If Not bTransparent Then pic.PSet (x0 + x, y0 + y), ICON_MASK
             Else
                 pic.PSet (x0 + x, y0 + y), QBColor(CInt("&H" & ch))
             End If
@@ -242,6 +244,23 @@ Private Sub LoadRows(ByVal sKey As String)
         R ".8777AAA777F778."
         R ".87777777777778."
         R ".88888888888888."
+        R "................"
+    Case "App"
+        R "................"
+        R "......1111......"
+        R "....11BBBB11...."
+        R "..11BBB00BBB11.."
+        R ".1BBBB0000BBBB1."
+        R ".11BBBB00BBBB11."
+        R ".1E11BBBBBB11E1."
+        R ".1EEE11BB11EEE1."
+        R ".1EEEEE11EEEEE1."
+        R ".1EEEEEE1EEEEE1."
+        R ".1EEEEEE1EEEEE1."
+        R ".11EEEEE1EEEE11."
+        R "...11EEE1EE11..."
+        R ".....11E111....."
+        R ".......11......."
         R "................"
     End Select
 End Sub

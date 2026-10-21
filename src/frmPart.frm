@@ -78,12 +78,19 @@ Private mFrames As Long, mFrameStart As Single
 Private Const GAP As Single = 60
 
 Public Sub Attach(ByVal slot As Integer)
+    Dim n As Integer, i As Integer
     DocIndex = slot
     ResetView mView
+    ' cascade each new part a little, like Window > Cascade would
+    For i = 1 To MAX_DOCS
+        If DocInUse(i) And i <> slot Then n = n + 1
+    Next i
+    Move n * 360, n * 360, frmMain.ScaleWidth * 0.85, frmMain.ScaleHeight * 0.85
     RefreshAll True
 End Sub
 
 Private Sub Form_Load()
+    ClassicLook Me
     ReDim mEdges(0 To 0)
     With lvwTimeline.ColumnHeaders
         .Add , , "#", 500
@@ -92,6 +99,17 @@ Private Sub Form_Load()
         .Add , , "Parameters", 4200
         .Add , , "Status", 1300
     End With
+End Sub
+
+' The header captions can go missing when the list is first moved, so put them back.
+Private Sub ColumnTitles()
+    Dim t() As String, i As Integer
+    t = Split("#|Feature|Type|Parameters|Status", "|")
+    For i = 0 To UBound(t)
+        If i + 1 <= lvwTimeline.ColumnHeaders.Count Then
+            If lvwTimeline.ColumnHeaders(i + 1).Text <> t(i) Then lvwTimeline.ColumnHeaders(i + 1).Text = t(i)
+        End If
+    Next i
 End Sub
 
 ' Rebuilds the tree, the timeline and the picture from the design.
@@ -155,14 +173,12 @@ End Sub
 
 Public Sub Redraw()
     DrawScene mView, picView, mEdges, mEdgeCount
-    picView.CurrentX = 6: picView.CurrentY = 4
-    picView.ForeColor = &H404040
     If Docs(DocIndex).Count = 0 Then
-        picView.Print "Empty part. Sketch a rectangle (R) or a circle (C) to begin."
+        TextAt picView, 6, 4, "Empty part. Sketch a rectangle (R) or a circle (C) to begin.", &H404040
     Else
-        picView.Print mEdgeCount & " edges"
+        TextAt picView, 6, 4, mEdgeCount & " edges", &H404040
     End If
-    picView.ForeColor = vbBlack
+    picView.Refresh
 End Sub
 
 Public Sub ViewIso()
@@ -195,6 +211,7 @@ Private Sub Form_Resize()
     tvwTree.Move 0, 0, treeW, h - tlH - GAP
     picView.Move treeW + GAP, 0, w - treeW - GAP, h - tlH - GAP
     lvwTimeline.Move 0, h - tlH, w, tlH
+    ColumnTitles
     If DocIndex <> 0 Then Redraw
 End Sub
 
@@ -284,8 +301,8 @@ Private Sub tvwTree_NodeClick(ByVal Node As MSComctlLib.Node)
     If Left$(Node.Key, 1) <> "f" Then Exit Sub
     i = Val(Mid$(Node.Key, 2))
     If i >= 1 And i <= lvwTimeline.ListItems.Count Then
-        Set lvwTimeline.SelectedItem = lvwTimeline.ListItems(i)
-        lvwTimeline.SelectedItem.EnsureVisible
+        lvwTimeline.ListItems(i).Selected = True
+        lvwTimeline.ListItems(i).EnsureVisible
         frmMain.SetStatus FeatureName(Docs(DocIndex), i) & ": " & Describe(Docs(DocIndex), i)
     End If
 End Sub

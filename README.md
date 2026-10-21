@@ -50,12 +50,9 @@ one copy of each command.
 
 ## Source
 
-The source is plain VB6 text: `SolidCraft98.vbp` plus `.frm` and `.bas`
-files in `src/`. There are no `.frx` files: icons, the logo and the splash
-are drawn at startup.
-
-It builds with [twinBASIC](https://twinbasic.com), which reads VB6 projects.
-Classic VB6 should open it too.
+The source is plain VB6 text: `src/SolidCraft98.vbp` plus `.frm` and `.bas`
+files. There are no `.frx` files: the icons, the logo and the splash are
+drawn at startup.
 
 | File | What it does |
 |---|---|
@@ -64,10 +61,42 @@ Classic VB6 should open it too.
 | `frmParams.frm` | The one dialog every command uses for its numbers |
 | `frmAbout.frm`, `frmSplash.frm` | About box and splash |
 | `modCommands.bas` | Every command, once |
-| `modModel.bas` | The design `Type`, feature list, save and open |
-| `modKernel.bas` | Turns features into edges ("geometry kernel") |
+| `modModel.bas` | The design `Type`, the feature list, Save and Open |
+| `modKernel.bas` | Turns features into edges (the "geometry kernel") |
 | `modView.bas` | Projection, orbit, drawing |
+| `modBars.bas` | The toolbar and status bar, drawn in PictureBoxes |
 | `modIcons.bas` | Toolbar icons as 16x16 text pixel art |
+| `modClassic.bas` | Keeps the classic look on modern Windows; coloured text |
 
-`tools/pixpng.py` renders the icons in `modIcons.bas` to a PNG, so you can
-check them without building.
+The toolbar and status bar are drawn by hand rather than taken from
+MSCOMCTL.OCX, because that OCX doesn't ship with current Windows. The
+TreeView and ListView are the MSCOMCTL ones as far as VB6 is concerned.
+
+## Building
+
+It builds with [twinBASIC](https://twinbasic.com), from the command line:
+
+```
+python3 tools/vb2tb.py src/SolidCraft98.vbp build/src
+python3 tools/impexp.py import build/SolidCraft98.twinproj build/src --overwrite
+twinBASIC.exe build\SolidCraft98.twinproj --buildAndExit32
+```
+
+`vb2tb.py` does what twinBASIC's own VBP import does, without the IDE: it
+turns each `.frm` into twinBASIC's form format, converts twips to pixels,
+maps the MSCOMCTL TreeView and ListView onto twinBASIC's built-in common
+controls, and embeds the manifest and the icon. `impexp.py` is twinBASIC's
+own MIT-licensed import/export tool, which packs the folder into a project.
+The EXE lands in `build/Build/`.
+
+A VB6 IDE should open `SolidCraft98.vbp` as it is. Put
+`SolidCraft98.exe.manifest` next to the EXE you make.
+
+## Tools
+
+| Tool | What it does |
+|---|---|
+| `tools/vb2tb.py` | VB6 project to twinBASIC source folder |
+| `tools/impexp.py` | twinBASIC's project packer (MIT, unchanged) |
+| `tools/pixpng.py` | Renders the icons in `modIcons.bas` to a PNG |
+| `tools/mkico.py` | Makes `SolidCraft98.ico` from the "App" icon |

@@ -1,5 +1,6 @@
 # build output and the packed project (rebuilt from src/ by tools/build)
 /Build/
+/build/
 /SolidCraft98.twinproj
 
 

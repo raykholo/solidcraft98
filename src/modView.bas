@@ -104,12 +104,11 @@ Private Sub DrawTriad(v As TView, pic As PictureBox)
     ox = 40: oy = pic.ScaleHeight - 40
     ProjectRaw v, 25, 0, 0, sx, sy
     pic.Line (ox, oy)-(ox + sx, oy - sy), vbRed
-    pic.CurrentX = ox + sx + 2: pic.CurrentY = oy - sy - 6: pic.ForeColor = vbRed: pic.Print "X"
+    TextAt pic, ox + sx + 2, oy - sy - 6, "X", vbRed
     ProjectRaw v, 0, 25, 0, sx, sy
     pic.Line (ox, oy)-(ox + sx, oy - sy), &H8000&
-    pic.CurrentX = ox + sx + 2: pic.CurrentY = oy - sy - 6: pic.ForeColor = &H8000&: pic.Print "Y"
+    TextAt pic, ox + sx + 2, oy - sy - 6, "Y", &H8000&
     ProjectRaw v, 0, 0, 25, sx, sy
     pic.Line (ox, oy)-(ox + sx, oy - sy), vbBlue
-    pic.CurrentX = ox + sx + 2: pic.CurrentY = oy - sy - 6: pic.ForeColor = vbBlue: pic.Print "Z"
-    pic.ForeColor = vbBlack
+    TextAt pic, ox + sx + 2, oy - sy - 6, "Z", vbBlue
 End Sub

@@ -110,13 +110,14 @@ End Type
 Private Declare Function GlobalMemoryStatusEx Lib "kernel32" (lpBuffer As MEMORYSTATUSEX) As Long
 
 Private Sub Form_Load()
+    ClassicLook Me
     Gradient picLogo, RGB(0, 0, 160), RGB(0, 0, 0)
     DrawLogo picLogo, 46, 24, 11, RGB(255, 255, 0)
     lblVersion.Caption = AppVersion() & "  (" & APP_BUILD & ")"
     lblInfo.Caption = APP_EDITION & vbCrLf & vbCrLf & _
         "This product is licensed to:" & vbCrLf & _
         "    Machine Shop, Back Office PC" & vbCrLf & vbCrLf & _
-        "Physical memory available to Windows: " & MemoryKB() & " KB"
+        "Physical memory available to Windows:" & vbCrLf & "    " & MemoryKB() & " KB"
 End Sub
 
 ' The real figure, formatted like it's still impressive.
