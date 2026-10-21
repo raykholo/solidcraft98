@@ -1,0 +1,123 @@
+name: Build
+
+# Builds SolidCraft98.exe with twinBASIC on Windows, checks that the packed EXE
+# still fits on one 1.44 MB floppy, and makes the release zip and the floppy
+# image. A tag v* publishes them as a GitHub release.
+
+on:
+  push:
+    branches: ["**"]
+    tags: ["v*"]
+  pull_request:
+  workflow_dispatch:
+
+env:
+  TWINBASIC_RELEASE: beta-x-1019
+  TWINBASIC_ZIP: twinBASIC_IDE_BETA_1019.zip
+  UPX_VERSION: "5.2.1"
+
+jobs:
+  build:
+    runs-on: windows-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.12"
+
+      - name: Get twinBASIC and UPX
+        shell: pwsh
+        run: |
+          $ProgressPreference = "SilentlyContinue"
+          Invoke-WebRequest "https://github.com/twinbasic/twinbasic/releases/download/$env:TWINBASIC_RELEASE/$env:TWINBASIC_ZIP" -OutFile tb.zip
+          Expand-Archive tb.zip C:\tB
+          Invoke-WebRequest "https://github.com/upx/upx/releases/download/v$env:UPX_VERSION/upx-$env:UPX_VERSION-win64.zip" -OutFile upx.zip
+          Expand-Archive upx.zip C:\upx
+          Remove-Item tb.zip, upx.zip
+
+      - name: Build
+        shell: pwsh
+        run: tools\ci\build.ps1 -TwinBasic C:\tB -Upx "C:\upx\upx-$env:UPX_VERSION-win64\upx.exe" -Out out
+
+      - name: Screenshot (when the build fails, to see what the IDE was waiting for)
+        if: failure()
+        shell: pwsh
+        run: |
+          Add-Type -AssemblyName System.Windows.Forms, System.Drawing
+          $b = [System.Windows.Forms.Screen]::PrimaryScreen.Bounds
+          $bmp = New-Object System.Drawing.Bitmap $b.Width, $b.Height
+          [System.Drawing.Graphics]::FromImage($bmp).CopyFromScreen($b.Location, [System.Drawing.Point]::Empty, $b.Size)
+          $bmp.Save("screen.png")
+
+      - uses: actions/upload-artifact@v7
+        if: failure()
+        with:
+          name: failure-screenshot
+          path: screen.png
+
+      - uses: actions/upload-artifact@v7
+        with:
+          name: exe
+          path: out/
+
+  package:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/download-artifact@v8
+        with:
+          name: exe
+          path: out
+
+      - name: Release zip and floppy image
+        run: |
+          sudo apt-get install -y -qq mtools dosfstools zip > /dev/null
+          if [[ "$GITHUB_REF" == refs/tags/v* ]]; then VER="${GITHUB_REF_NAME#v}"; else VER="dev-${GITHUB_SHA::7}"; fi
+          echo "VER=$VER" >> "$GITHUB_ENV"
+          mkdir -p dist-out
+          # the zip: the EXE as built, with the readme, licence and samples
+          D="SolidCraft98-$VER"
+          mkdir -p "$D/Samples"
+          cp out/SolidCraft98.exe dist/README.TXT LICENSE NOTICE "$D/"
+          cp samples/* "$D/Samples/"
+          zip -q -r -X "dist-out/$D.zip" "$D"
+          # the floppy: the UPX-packed EXE, all on one 1.44 MB disk
+          mkfs.fat -C -F 12 -n "SC98" "dist-out/SolidCraft98-$VER-floppy.img" 1440 > /dev/null
+          I="dist-out/SolidCraft98-$VER-floppy.img"
+          mcopy -i "$I" out/SC98.EXE ::SC98.EXE
+          mcopy -i "$I" dist/README.TXT LICENSE NOTICE ::
+          mmd -i "$I" ::Samples
+          mcopy -i "$I" samples/* ::Samples/
+          mdir -i "$I" -/ ::
+          cd dist-out && sha256sum * | tee SHA256SUMS.txt
+
+      - uses: actions/upload-artifact@v7
+        with:
+          name: SolidCraft98-${{ env.VER }}
+          path: dist-out/
+
+  release:
+    if: startsWith(github.ref, 'refs/tags/v')
+    needs: package
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v8
+        with:
+          pattern: SolidCraft98-*
+          path: dist-out
+          merge-multiple: true
+
+      - name: Publish
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          cd dist-out
+          gh release create "$GITHUB_REF_NAME" --repo "$GITHUB_REPOSITORY" --title "SolidCraft 98 ${GITHUB_REF_NAME#v}" \
+            --notes "Built by CI. SolidCraft 98 is a parody, not affiliated with or a replacement for SolidCraft. SHA-256 sums are in SHA256SUMS.txt." \
+            *.zip *.img SHA256SUMS.txt

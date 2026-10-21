@@ -1,5 +1,7 @@
 # SolidCraft 98
 
+[![Build](https://github.com/raykholo/solidcraft98/actions/workflows/build.yml/badge.svg)](https://github.com/raykholo/solidcraft98/actions/workflows/build.yml)
+
 > **INTRODUCING SOLIDCRAFT 98 PROFESSIONAL EDITION.** Parametric solid
 > modelling comes to the desktop PC! Sketch it, extrude it, drill it, and
 > change your mind afterwards: every feature is fully editable, and
@@ -41,6 +43,11 @@ and run `SolidCraft98.exe`. There's no installer and nothing to register:
 one EXE, which is very un-1999 of it. It runs on Windows 10 and 11 and on
 ReactOS. The EXE isn't signed, so Windows may say it "protected your PC":
 choose More info, then Run anyway.
+
+Or on a floppy, as was intended: each release also has a 1.44 MB disk image
+(`SolidCraft98-<version>-floppy.img`) with the EXE packed by UPX to about
+520 KB, so it all fits on one disk. Write it to a disk (or attach it to a
+virtual machine) and run `A:\SC98.EXE`.
 
 ## What it can't do yet
 
@@ -276,6 +283,12 @@ turns each `.frm` into twinBASIC's form format, converts twips to pixels,
 maps the MSCOMCTL TreeView and ListView onto twinBASIC's built-in common
 controls, and embeds the manifest and the icon. `impexp.py` is twinBASIC's
 own MIT-licensed import/export tool.
+
+**On GitHub**, every push builds on a Windows runner (`.github/workflows/build.yml`,
+which runs `tools/ci/build.ps1`): twinBASIC's first-run questions are answered
+in advance, the build has a time limit, and it fails if the UPX-packed EXE no
+longer fits on a 1.44 MB floppy. A `v*` tag publishes the zip and the floppy
+image as a release.
 
 **With Visual Basic 6**, if you have it: open `src/SolidCraft98.vbp`,
 File > Make SolidCraft98.exe, and put `SolidCraft98.exe.manifest` next to

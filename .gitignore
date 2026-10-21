@@ -9,3 +9,7 @@
 *.meta
 __pycache__/
 *.pyc
+
+# CI build output
+/out/
+/dist-out/
