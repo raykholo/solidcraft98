@@ -1,0 +1,291 @@
+VERSION 5.00
+Object = "{831FDD16-0C5C-11D2-A9FC-0000F8754DA1}#2.0#0"; "MSCOMCTL.OCX"
+Begin VB.Form frmPart
+   Caption         =   "Part"
+   ClientHeight    =   6000
+   ClientLeft      =   60
+   ClientTop       =   345
+   ClientWidth     =   9000
+   KeyPreview      =   -1  'True
+   LinkTopic       =   "Form1"
+   MDIChild        =   -1  'True
+   Begin MSComctlLib.TreeView tvwTree
+      Height          =   4200
+      Left            =   0
+      TabIndex        =   0
+      Top             =   0
+      Width           =   2400
+      _ExtentX        =   4233
+      _ExtentY        =   7408
+      _Version        =   393217
+      HideSelection   =   0   'False
+      Indentation     =   353
+      LabelEdit       =   1
+      LineStyle       =   1
+      Style           =   6
+      Appearance      =   1
+   End
+   Begin VB.PictureBox picView
+      AutoRedraw      =   -1  'True
+      BackColor       =   &H00E0E0E0&
+      Height          =   4200
+      Left            =   2460
+      MousePointer    =   15  'Size All
+      ScaleHeight     =   276
+      ScaleMode       =   3  'Pixel
+      ScaleWidth      =   432
+      TabIndex        =   1
+      Top             =   0
+      Width           =   6540
+   End
+   Begin MSComctlLib.ListView lvwTimeline
+      Height          =   1740
+      Left            =   0
+      TabIndex        =   2
+      Top             =   4260
+      Width           =   9000
+      _ExtentX        =   15875
+      _ExtentY        =   3069
+      View            =   3
+      LabelEdit       =   1
+      LabelWrap       =   -1  'True
+      HideSelection   =   0   'False
+      FullRowSelect   =   -1  'True
+      GridLines       =   -1  'True
+      _Version        =   393217
+      Appearance      =   1
+   End
+End
+Attribute VB_Name = "frmPart"
+Attribute VB_GlobalNameSpace = False
+Attribute VB_Creatable = False
+Attribute VB_PredeclaredId = True
+Attribute VB_Exposed = False
+' frmPart - one part: feature tree on the left, wireframe viewport on the
+' right, timeline along the bottom. The design itself lives in modDoc.
+Option Explicit
+
+Public DocIndex As Integer
+
+Private mView As TView
+Private mEdges() As TEdge
+Private mEdgeCount As Long
+Private mDragging As Boolean
+Private mDragX As Single, mDragY As Single
+Private mDragButton As Integer
+Private mFrames As Long, mFrameStart As Single
+
+Private Const GAP As Single = 60
+
+Public Sub Attach(ByVal slot As Integer)
+    DocIndex = slot
+    ResetView mView
+    RefreshAll True
+End Sub
+
+Private Sub Form_Load()
+    ReDim mEdges(0 To 0)
+    With lvwTimeline.ColumnHeaders
+        .Add , , "#", 500
+        .Add , , "Feature", 1600
+        .Add , , "Type", 1800
+        .Add , , "Parameters", 4200
+        .Add , , "Status", 1300
+    End With
+End Sub
+
+' Rebuilds the tree, the timeline and the picture from the design.
+Public Sub RefreshAll(ByVal bFit As Boolean)
+    Dim d As Integer
+    d = DocIndex
+    If d = 0 Then Exit Sub
+    Caption = DocTitle(d)
+    FillTree
+    FillTimeline
+    mEdgeCount = Regenerate(Docs(d), mEdges)
+    If bFit Then FitView mView, picView, mEdges, mEdgeCount
+    Redraw
+End Sub
+
+Private Sub FillTree()
+    Dim i As Integer, n As Node, sKey As String, sParent As String
+    tvwTree.Nodes.Clear
+    Set n = tvwTree.Nodes.Add(, , "root", RTrim$(Docs(DocIndex).Title))
+    n.Expanded = True
+    tvwTree.Nodes.Add "root", tvwChild, "origin", "Origin"
+    tvwTree.Nodes.Add "origin", tvwChild, , "Front Plane (XZ)"
+    tvwTree.Nodes.Add "origin", tvwChild, , "Top Plane (XY)"
+    tvwTree.Nodes.Add "origin", tvwChild, , "Right Plane (YZ)"
+    For i = 1 To Docs(DocIndex).Count
+        sKey = "f" & i
+        ' Sketches hang under the feature that uses them, the way people expect.
+        sParent = "root"
+        Set n = tvwTree.Nodes.Add(sParent, tvwChild, sKey, FeatureName(Docs(DocIndex), i))
+        If Docs(DocIndex).Features(i).Kind = FK_EXTRUDE Or Docs(DocIndex).Features(i).Kind = FK_REVOLVE Then
+            MoveUnder Docs(DocIndex).Features(i).Ref, i
+        End If
+        If Not RefOk(Docs(DocIndex), i) Then n.Text = n.Text & " (!)"
+    Next i
+End Sub
+
+' Re-adds sketch nSketch as the child of feature nFeature.
+Private Sub MoveUnder(ByVal nSketch As Integer, ByVal nFeature As Integer)
+    On Error Resume Next   ' a missing sketch is shown with (!) anyway
+    Dim t As String
+    t = tvwTree.Nodes("f" & nSketch).Text
+    tvwTree.Nodes.Remove "f" & nSketch
+    tvwTree.Nodes.Add "f" & nFeature, tvwChild, "f" & nSketch, t
+End Sub
+
+Private Sub FillTimeline()
+    Dim i As Integer, li As ListItem
+    lvwTimeline.ListItems.Clear
+    For i = 1 To Docs(DocIndex).Count
+        Set li = lvwTimeline.ListItems.Add(, "t" & i, CStr(i))
+        li.SubItems(1) = FeatureName(Docs(DocIndex), i)
+        li.SubItems(2) = KindName(Docs(DocIndex).Features(i).Kind)
+        li.SubItems(3) = Describe(Docs(DocIndex), i)
+        If RefOk(Docs(DocIndex), i) Then
+            li.SubItems(4) = "OK"
+        Else
+            li.SubItems(4) = "Rebuild error"
+        End If
+    Next i
+End Sub
+
+Public Sub Redraw()
+    DrawScene mView, picView, mEdges, mEdgeCount
+    picView.CurrentX = 6: picView.CurrentY = 4
+    picView.ForeColor = &H404040
+    If Docs(DocIndex).Count = 0 Then
+        picView.Print "Empty part. Sketch a rectangle (R) or a circle (C) to begin."
+    Else
+        picView.Print mEdgeCount & " edges"
+    End If
+    picView.ForeColor = vbBlack
+End Sub
+
+Public Sub ViewIso()
+    ResetView mView
+    FitView mView, picView, mEdges, mEdgeCount
+    Redraw
+    frmMain.SetStatus "Isometric view."
+End Sub
+
+Public Sub ZoomFit()
+    FitView mView, picView, mEdges, mEdgeCount
+    Redraw
+End Sub
+
+Public Sub Regen()
+    RefreshAll False
+    frmMain.SetStatus "Regenerated " & Docs(DocIndex).Count & " features, " & mEdgeCount & " edges."
+End Sub
+
+Private Sub Form_Activate()
+    frmMain.SetFps ""
+End Sub
+
+Private Sub Form_Resize()
+    Dim w As Single, h As Single, treeW As Single, tlH As Single
+    If WindowState = vbMinimized Then Exit Sub
+    w = ScaleWidth: h = ScaleHeight
+    treeW = 2400: tlH = 1740
+    If w < treeW + 600 Or h < tlH + 600 Then Exit Sub
+    tvwTree.Move 0, 0, treeW, h - tlH - GAP
+    picView.Move treeW + GAP, 0, w - treeW - GAP, h - tlH - GAP
+    lvwTimeline.Move 0, h - tlH, w, tlH
+    If DocIndex <> 0 Then Redraw
+End Sub
+
+Private Sub Form_QueryUnload(Cancel As Integer, UnloadMode As Integer)
+    If DocIndex = 0 Then Exit Sub
+    If DocDirty(DocIndex) Then
+        Select Case MsgBox("Save changes to " & RTrim$(Docs(DocIndex).Title) & "?", vbQuestion Or vbYesNoCancel, App.Title)
+        Case vbYes
+            RunCommand "Save"
+            If DocDirty(DocIndex) Then Cancel = 1
+        Case vbCancel
+            Cancel = 1
+        End Select
+    End If
+End Sub
+
+Private Sub Form_Unload(Cancel As Integer)
+    FreeDocSlot DocIndex
+    DocIndex = 0
+End Sub
+
+' Single-key shortcuts. Ctrl+N/O/S/Z and F1/F5 live on the menus.
+Private Sub Form_KeyDown(KeyCode As Integer, Shift As Integer)
+    Dim sCmd As String
+    If Shift <> 0 Then Exit Sub
+    Select Case KeyCode
+    Case vbKeyR: sCmd = "SketchRect"
+    Case vbKeyC: sCmd = "SketchCircle"
+    Case vbKeyE: sCmd = "Extrude"
+    Case vbKeyV: sCmd = "Revolve"
+    Case vbKeyH: sCmd = "Hole"
+    Case vbKeyI: sCmd = "ViewIso"
+    Case vbKeyF: sCmd = "ZoomFit"
+    Case vbKeyAdd, 187: ZoomBy 1.25: KeyCode = 0
+    Case vbKeySubtract, 189: ZoomBy 0.8: KeyCode = 0
+    End Select
+    If Len(sCmd) > 0 Then
+        KeyCode = 0
+        RunCommand sCmd
+    End If
+End Sub
+
+Private Sub ZoomBy(ByVal k As Double)
+    mView.Zoom = mView.Zoom * k
+    mView.PanX = mView.PanX * k
+    mView.PanY = mView.PanY * k
+    Redraw
+End Sub
+
+' ---- Orbit: left drag. Pan: right drag. ----
+
+Private Sub picView_MouseDown(Button As Integer, Shift As Integer, X As Single, Y As Single)
+    mDragging = True
+    mDragButton = Button
+    mDragX = X: mDragY = Y
+    mFrames = 0: mFrameStart = Timer
+End Sub
+
+Private Sub picView_MouseMove(Button As Integer, Shift As Integer, X As Single, Y As Single)
+    Dim el As Single
+    If Not mDragging Then Exit Sub
+    If mDragButton = vbLeftButton Then
+        mView.Yaw = mView.Yaw - (X - mDragX) * 0.5
+        mView.Pitch = mView.Pitch + (Y - mDragY) * 0.5
+        If mView.Pitch > 90 Then mView.Pitch = 90
+        If mView.Pitch < -90 Then mView.Pitch = -90
+    Else
+        mView.PanX = mView.PanX + (X - mDragX)
+        mView.PanY = mView.PanY + (Y - mDragY)
+    End If
+    mDragX = X: mDragY = Y
+    Redraw
+    mFrames = mFrames + 1
+    el = Timer - mFrameStart
+    If el > 0.5 Then
+        frmMain.SetFps Format$(mFrames / el, "0") & " fps"
+        mFrames = 0: mFrameStart = Timer
+    End If
+End Sub
+
+Private Sub picView_MouseUp(Button As Integer, Shift As Integer, X As Single, Y As Single)
+    mDragging = False
+End Sub
+
+Private Sub tvwTree_NodeClick(ByVal Node As MSComctlLib.Node)
+    Dim i As Integer
+    If Left$(Node.Key, 1) <> "f" Then Exit Sub
+    i = Val(Mid$(Node.Key, 2))
+    If i >= 1 And i <= lvwTimeline.ListItems.Count Then
+        Set lvwTimeline.SelectedItem = lvwTimeline.ListItems(i)
+        lvwTimeline.SelectedItem.EnsureVisible
+        frmMain.SetStatus FeatureName(Docs(DocIndex), i) & ": " & Describe(Docs(DocIndex), i)
+    End If
+End Sub

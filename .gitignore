@@ -1,0 +1,8 @@
+# build output and the packed project (rebuilt from src/ by tools/build)
+/Build/
+/SolidCraft98.twinproj
+
+
+
+
+*.meta
