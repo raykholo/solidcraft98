@@ -9,6 +9,8 @@ Parametric CAD, the way it would have been written in 1999.
 3. Or make your own: R sketches a rectangle, C a circle, E extrudes,
    V revolves, H drills a hole. Double-click a feature to change it,
    Del deletes it. Drag in the view to orbit.
+4. S shades the view (slowly). File, Export for Rapid Prototyping
+   writes an .stl file for a 3D printer.
 
 The full guide, "Design your first part", is in the README on the
 project page.

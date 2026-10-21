@@ -7,23 +7,24 @@
 > change your mind afterwards: every feature is fully editable, and
 > everything built on it follows. A true 32-bit Windows application with a
 > genuine Multiple Document Interface, a 16-colour toolbar, real-time*
-> wireframe graphics and a Turbo button. Runs in 16 MB of RAM**. Fits on
-> two floppy disks***.
+> wireframe graphics, photorealistic** shading, Export for Rapid
+> Prototyping and a Turbo button. Runs in 16 MB of RAM***. Fits on one
+> floppy disk****.
 >
-> <sub>\* about 12 frames a second. \*\* untested. \*\*\* one, if
-> they're 2.88 MB. We don't talk about that.</sub>
+> <sub>\* about 12 frames a second. \*\* flat. \*\*\* untested.
+> \*\*\*\* packed with UPX, which came out in 1998, so it counts.</sub>
 
-![SolidCraft 98 on Windows 11, showing the Mounting Plate sample](docs/screenshots/windows11-mounting-plate.png)
+![SolidCraft 98 on Windows 11, showing the Mounting Plate sample, shaded](docs/screenshots/windows11-mounting-plate.png)
 
 SolidCraft 98 is a parametric CAD program written the way it would have
 been written in 1999: in Visual Basic, with an MDI window, a `TreeView`, a
 `ListView` in Report mode, and a wireframe viewport drawn with `Line`, one
-edge at a time.
+edge at a time. The shaded view fills in every pixel itself.
 
 It's a joke, but it works. You can sketch, extrude, revolve, drill holes,
 put features on top of other features, change any of them later, open
-designs from SolidCraft itself, and save the part to a file nobody else can
-read.
+designs from SolidCraft itself, save the part to a file nobody else can
+read, and export it as an STL file that any 3D-printing slicer can.
 
 > **SolidCraft 98 is a parody.** It is not affiliated with, endorsed by, or a
 > replacement for SolidCraft, and it shares no code with it.
@@ -31,12 +32,12 @@ read.
 ![SolidCraft 98 on ReactOS, opening a design made in SolidCraft](docs/screenshots/reactos-opens-a-solidcraft-design.png)
 
 <sub>On ReactOS with the Classic theme, at 800 x 600: a design made in
-SolidCraft, rebuilt in SolidCraft 98. The fillet is waiting for SolidCraft
-2000.</sub>
+SolidCraft, rebuilt and shaded in SolidCraft 98. The fillet is waiting for
+SolidCraft 2000.</sub>
 
 ## Getting it
 
-Download `SolidCraft98-1.0.zip` from the
+Download `SolidCraft98-<version>.zip` (the newest is 1.1) from the
 [Releases page](../../releases), check its SHA-256 against the one listed
 there if you like, unzip it anywhere,
 and run `SolidCraft98.exe`. There's no installer and nothing to register:
@@ -51,12 +52,12 @@ virtual machine) and run `A:\SC98.EXE`.
 
 ## What it can't do yet
 
-- Export. Parts only save as `.sc98`, which nothing else reads. (It can open
-  SolidCraft designs, though: see below.)
-- Shading. It's wireframe, one `Line` at a time.
 - Sketches are rectangles and circles, flat, facing up. Revolve turns them
   about the Y axis. Holes go straight down from a top face.
-- No booleans: a boss on a plate is two bodies that touch.
+- No booleans to speak of. In an STL, a body standing wholly on another's
+  top face is joined to it; bodies that meet any other way stay separate
+  (slicers merge them).
+- Export is STL only. Parts save as `.sc98`, which nothing else reads.
 
 ## What's in it
 
@@ -65,8 +66,9 @@ virtual machine) and run `A:\SC98.EXE`.
 - Each part opens in its own child window, which you can minimise inside the
   app by accident.
 - A feature tree on the left and a timeline along the bottom.
-- A wireframe viewport. It starts isometric. Drag with the left button to
-  orbit and the right button to pan; `+` and `-` zoom.
+- A viewport, wireframe or shaded. It starts isometric, looking at the
+  front, right and top. Drag with the left button to orbit and the right
+  button to pan; `+` and `-` zoom. S shades it, slowly.
 - Commands: Sketch Rectangle (with rounded corners), Sketch Circle,
   Extrude, Revolve, and Hole. Plus Undo, Zoom to Fit and Regenerate.
 - It's parametric. Double-click any feature to change its numbers, and
@@ -75,6 +77,8 @@ virtual machine) and run `A:\SC98.EXE`.
 - Sketches sit on the ground or on top of an extrude, and move with it.
 - Holes go into the top of any extrude. "Through all" goes through
   everything stacked underneath.
+- File > Export for Rapid Prototyping writes a binary STL, closed and
+  facing out, for a 3D printer or a service bureau.
 - Save and Open use `Put` and `Get` on a single `Type`. Open a file from a
   newer version and you're told so. Files from versions 3 and 4 are converted.
 - Number boxes go through `CDbl` with no validation, so typing `20mm` gets you
@@ -108,6 +112,9 @@ minutes. (It's in `samples/Mounting Plate.sc98` if you'd rather look.)
    8 mm. The boss moves up with the plate, and the bore still goes all the
    way through.
 8. **Save.** Ctrl+S.
+9. **Shade it.** Press S, and watch it render a few rows at a time.
+10. **Print it.** File > Export for Rapid Prototyping (*.stl). Open the STL
+    in any slicer (PrusaSlicer, Cura, OrcaSlicer...) and print it.
 
 Tips:
 
@@ -118,6 +125,25 @@ Tips:
   selected extrude too.
 - Number boxes do arithmetic: 80/2, 25+3.5. They don't do units, and
   they'll tell you so.
+
+## Shaded, and Export for Rapid Prototyping
+
+**View > Shaded** (S, or the cube on the toolbar) draws the part as solid
+surfaces. It's a software renderer, as was the custom: every triangle is
+filled in pixel by pixel with a depth for each pixel, so near things hide
+far things properly, and lines go where faces meet at a corner. Then the
+picture goes up a few rows at a time, top to bottom. It takes about a
+second and a half, on purpose. While you orbit, the view is wireframe; it
+shades again when you let go.
+
+**File > Export for Rapid Prototyping (\*.stl)** writes the part for a 3D
+printer: a binary STL in millimetres, closed, every triangle facing out,
+holes cut all the way through, and the part moved into the all-positive
+corner of space as the 1989 format asked. A boss standing on a plate is joined to it, so the two come out as
+one solid. Circles become 64-sided. The samples open in PrusaSlicer as
+manifold and slice without repairs.
+
+![Export for Rapid Prototyping](docs/screenshots/windows11-export-stl.png)
 
 ## Opening SolidCraft designs
 
@@ -163,6 +189,8 @@ With Turbo on:
 - **Regenerate** (F5) says "Did not converge. Try again." twice, then
   succeeds on the third press. The solver uses a `Variant`.
 - **Orbit** is capped at 4 frames a second, and the status bar says so.
+- **Shaded** takes four seconds instead of one and a half: Turbo quality.
+  Every pixel is rendered twice, to be sure.
 - **"20mm" in a number box** escalates: Type mismatch, then Still a type
   mismatch, then "It's a TextBox, not a mind reader", then a tip about
   `Val()`. On the fifth try it gives up and takes 20.
@@ -207,6 +235,7 @@ the clock or a disk drive, and no design is ever lost.
 | R, C | Sketch rectangle, sketch circle |
 | E, V, H | Extrude, Revolve, Hole |
 | I, F | Isometric view, Zoom to fit |
+| S | Shaded (again for wireframe) |
 | Enter, or double-click | Edit the selected feature |
 | Del | Delete the selected feature |
 | + / - | Zoom in and out |
@@ -238,7 +267,10 @@ drawn at startup.
 | `modCommands.bas` | Every command, once |
 | `modModel.bas` | The design `Type`, the feature list, Save and Open |
 | `modKernel.bas` | Turns features into edges (the "geometry kernel") |
-| `modView.bas` | Projection, orbit, drawing |
+| `modView.bas` | Projection, orbit, wireframe drawing |
+| `modMesh.bas` | Turns the part into closed triangle meshes |
+| `modShade.bas` | The shaded view: a software renderer |
+| `modStl.bas` | Export for Rapid Prototyping (binary STL) |
 | `modBars.bas` | The toolbar and status bar, drawn in PictureBoxes |
 | `modIcons.bas` | Toolbar icons as 16x16 text pixel art |
 | `modImport.bas` | Opening SolidCraft designs |

@@ -1,11 +1,15 @@
 # Roadmap
 
-What's planned, and what might happen. Only the first section is a promise.
+What's been done, and what might happen. Nothing below "Done" is a promise.
 
-## Planned
+## Done
 
 - **1.1:** Export for Rapid Prototyping (`.stl`), so parts can be 3D-printed;
   and a shaded view, slow on purpose (slower still with Turbo on).
+
+## Planned
+
+Nothing new is planned. What comes next, if anything, is from the list below.
 
 ## Maybe, not promised
 
