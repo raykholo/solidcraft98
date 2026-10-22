@@ -74,6 +74,31 @@ Public Sub ToolbarSetChecked(ByVal pic As PictureBox, ByVal sKey As String, ByVa
     Next i
 End Sub
 
+' For the remote control's read-out: button i (1 to ToolbarCount); False for
+' a separator.
+Public Function ToolbarCount() As Integer
+    ToolbarCount = mCount
+End Function
+
+Public Function ToolbarButton(ByVal i As Integer, sKey As String, sTip As String, nLeft As Long, nWidth As Long, bChecked As Boolean) As Boolean
+    If i < 1 Or i > mCount Then Exit Function
+    If mButtons(i).IsSep Then Exit Function
+    sKey = mButtons(i).Key: sTip = mButtons(i).Tip
+    nLeft = mButtons(i).Left: nWidth = mButtons(i).Width: bChecked = mButtons(i).Checked
+    ToolbarButton = True
+End Function
+
+Public Function ToolbarButtonTop() As Long
+    ToolbarButtonTop = BAR_TOP
+End Function
+
+Public Function StatusText(ByVal sKey As String) As String
+    Dim i As Integer
+    For i = 1 To mPanelCount
+        If mPanels(i).Key = sKey Then StatusText = mPanels(i).Text: Exit Function
+    Next i
+End Function
+
 ' Where the toolbar's buttons end, for things drawn after them.
 Public Function ToolbarRight() As Long
     If mCount > 0 Then ToolbarRight = mButtons(mCount).Left + mButtons(mCount).Width

@@ -57,6 +57,11 @@ Sub FloppyDraw(ByVal dp As Any Ptr)
     Next
 End Sub
 
+Function FloppyReadOut(ByVal dp As Any Ptr) As String
+    Return "A floppy disk picture. Copying " & Fl.nm & " to A:\  Disk " & Fl.disk & " of " & Fl.disks & _
+        ", " & Format(Fl.done / 1024, "#,##0") & " KB of " & Format(Fl.total / 1024, "#,##0") & " KB."
+End Function
+
 Sub FloppyTick(ByVal dp As Any Ptr)
     Dim As TDlg Ptr d = dp
     If Timer - Fl.lastTick < 0.05 Then Exit Sub
@@ -90,6 +95,7 @@ Function RunFloppy(ByRef sName As String, ByVal nBytes As Double) As Boolean
     Dim As Long i = AddCtl(d, CT_BUTTON, 284, 104, 75, 23, "Cancel", IDCANCEL)
     d.c(i).isCancel = True: d.focus = i
     d.drawFn = @FloppyDraw
+    d.readOutFn = @FloppyReadOut
     d.tickFn = @FloppyTick
     RunDialog d
     Return Fl.finished
@@ -256,6 +262,11 @@ Sub SetupDraw(ByVal dp As Any Ptr)
     Text ox + 16, oy + 164, "Please do not turn off your computer.", C_FACE
 End Sub
 
+Function SetupReadOut(ByVal dp As Any Ptr) As String
+    Return "Copying C:\WINDOWS\SYSTEM\MSCOMCTL.OCX over C:\WINDOWS\SYSTEM\MSCOMCTL.OCX: " & Int(SetupPct) & _
+        "%. Please do not turn off your computer. (No buttons: it has to finish.)"
+End Function
+
 Sub SetupTick(ByVal dp As Any Ptr)
     Dim As TDlg Ptr d = dp
     If Timer - SetupLast < 0.08 Then Exit Sub
@@ -284,6 +295,7 @@ Sub ShowSetup()
     d.w = 406: d.h = 216
     CenterDialog d
     d.drawFn = @SetupDraw
+    d.readOutFn = @SetupReadOut
     d.tickFn = @SetupTick
     d.keyFn = @SetupKey
     d.focus = -1
@@ -381,6 +393,10 @@ Function CreditsMouse(ByVal dp As Any Ptr, ByRef ev As UIEvent) As Boolean
     Return True
 End Function
 
+Function CreditsReadOut(ByVal dp As Any Ptr) As String
+    Return "A demo-scene credits screen: stars, copper bars and scrolling text. A click or a key closes it."
+End Function
+
 Sub ShowCredits()
     Dim d As TDlg
     Dim i As Long
@@ -391,6 +407,7 @@ Sub ShowCredits()
     CenterDialog d
     DemoT = 0: DemoScroll = d.h: DemoLast = 0
     d.drawFn = @CreditsDraw
+    d.readOutFn = @CreditsReadOut
     d.tickFn = @CreditsTick
     d.keyFn = @CreditsKey
     d.mouseFn = @CreditsMouse

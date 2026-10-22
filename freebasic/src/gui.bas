@@ -59,10 +59,12 @@ Dim Shared NeedRedraw As Boolean = True
 Dim Shared Busy As Boolean                  ' draw the hourglass
 Dim Shared HeadlessMode As Boolean          ' null driver: scripted test run
 Dim Shared QuitRequested As Boolean
+Dim Shared RemoteMode As Boolean            ' --remote: driven over a pipe (remote.bas)
 
 Declare Sub AppRender()
 Declare Sub AppEvent(ByRef ev As UIEvent)
 Declare Sub AppTick()
+Declare Sub RemoteStep()
 
 ' ---- the script: clicks, keys and screenshots from a file ----
 
@@ -376,6 +378,7 @@ Type TDlg
     tickFn As Sub(ByVal d As Any Ptr)
     keyFn As Function(ByVal d As Any Ptr, ByRef ev As UIEvent) As Boolean   ' True: handled
     mouseFn As Function(ByVal d As Any Ptr, ByRef ev As UIEvent) As Boolean
+    readOutFn As Function(ByVal d As Any Ptr) As String          ' what a screen reader says about the drawing
     user As Any Ptr
     capture As Long         ' control the mouse went down on
     dragTitle As Boolean
@@ -698,6 +701,7 @@ Declare Sub DialogEvent(ByVal d As TDlg Ptr, ByRef ev As UIEvent)
 Sub UIStep()
     Dim ev As UIEvent
     ScriptStep
+    If RemoteMode Then RemoteStep
     Dim As Long n = 0
     Do While PollEvent(ev)
         ' a move only moves the pointer, unless whatever handles it says otherwise
@@ -753,7 +757,7 @@ Function RunDialog(ByRef d As TDlg) As Long
     Do
         UIStep
         ' a test script that has run out leaves no dialog waiting for a person
-        If HeadlessMode AndAlso ScriptPos >= ScriptCount AndAlso EvHead = EvTail AndAlso Timer >= ScriptWaitUntil Then d.done = True: d.result = 0
+        If HeadlessMode AndAlso Not RemoteMode AndAlso ScriptPos >= ScriptCount AndAlso EvHead = EvTail AndAlso Timer >= ScriptWaitUntil Then d.done = True: d.result = 0
     Loop Until d.done
     DlgTop -= 1
     NeedRedraw = True

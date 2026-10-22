@@ -320,7 +320,7 @@ Function FileDialog(ByVal isSave As Boolean, ByRef sDefault As String, ByRef sFi
     i = AddCtl(d, CT_COMBO, 90, 227, 230, 22, Left(FileFilters(0), InStr(FileFilters(0), "|") - 1))   ' 7 FD_TYPE
     i = AddCtl(d, CT_BUTTON, 330, 198, 75, 23, IIf(isSave, "&Save", "&Open"), IDOK): d.c(i).isDefault = True   ' 8
     i = AddCtl(d, CT_BUTTON, 330, 227, 75, 23, "Cancel", IDCANCEL): d.c(i).isCancel = True                   ' 9
-    i = AddCtl(d, CT_CUSTOM, 336, 9, 23, 22)                                  ' 10 FD_UP
+    i = AddCtl(d, CT_CUSTOM, 336, 9, 23, 22, "Up One Level")                                  ' 10 FD_UP
     d.c(2).disabled = False
     d.clickFn = @FileClick
     d.drawFn = @FileDraw

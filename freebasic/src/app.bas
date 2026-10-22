@@ -437,6 +437,12 @@ Sub FatalDraw(ByVal dp As Any Ptr)
     TextAt ScrW \ 2 - 110, y + 50 + 10 * 26, "Press any key to continue " & IIf(CLng(Timer * 2) Mod 2, "_", " "), C_HILITE, False, 2
 End Sub
 
+Function FatalReadOut(ByVal dp As Any Ptr) As String
+    Return "The whole screen is blue: A fatal exception 0E has occurred at 0028:SOLIDCRAFT+00000D1V0. " & _
+        "Something somewhere was divided by zero. The current part will not be terminated. It is fine. " & _
+        "Press any key to return to SolidCraft 98. Then type a number that isn't zero."
+End Function
+
 Function FatalKey(ByVal dp As Any Ptr, ByRef ev As UIEvent) As Boolean
     Dim As TDlg Ptr d = dp
     d->done = True
@@ -452,6 +458,7 @@ Sub ShowFatal()
     d.noFrame = True
     d.x = 0: d.y = 0: d.w = ScrW: d.h = ScrH
     d.drawFn = @FatalDraw
+    d.readOutFn = @FatalReadOut
     d.keyFn = @FatalKey
     d.mouseFn = @FatalMouse
     d.focus = -1
@@ -524,6 +531,10 @@ Sub AboutDraw(ByVal dp As Any Ptr)
     HLine ox + 12, oy + 161, d->w - 30, C_HILITE
 End Sub
 
+Function AboutReadOut(ByVal dp As Any Ptr) As String
+    Return "A picture: the SolidCraft 98 logo, a block with a hole in it, and the name in big letters."
+End Function
+
 Dim Shared AboutTyped As String
 
 Function AboutKey(ByVal dp As Any Ptr, ByRef ev As UIEvent) As Boolean
@@ -559,6 +570,7 @@ Sub ShowAbout()
     i = AddCtl(d, CT_BUTTON, 290, 170, 75, 23, "OK", IDOK): d.c(i).isDefault = True: d.c(i).isCancel = True
     d.focus = i
     d.drawFn = @AboutDraw
+    d.readOutFn = @AboutReadOut
     d.keyFn = @AboutKey
     d.mouseFn = @AboutMouse
     AboutTyped = ""
@@ -1263,6 +1275,7 @@ Sub Main()
         Select Case a
         Case "--script": i += 1: sScript = Command(i)
         Case "--headless": HeadlessMode = True
+        Case "--remote": RemoteMode = True
         Case "--fullscreen": FullScreenMode = True
         Case "--size"
             i += 1
@@ -1311,7 +1324,7 @@ Sub Main()
     Do
         UIStep
         If QuitRequested Then Exit Do
-        If HeadlessMode And ScriptPos >= ScriptCount And EvHead = EvTail And Timer >= ScriptWaitUntil Then Exit Do
+        If HeadlessMode And Not RemoteMode And ScriptPos >= ScriptCount And EvHead = EvTail And Timer >= ScriptWaitUntil Then Exit Do
     Loop
     If LogFile Then Close #LogFile
 End Sub

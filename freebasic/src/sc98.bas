@@ -24,5 +24,6 @@
 #include "part.bas"
 #include "eggs.bas"
 #include "app.bas"
+#include "remote.bas"
 
 Main

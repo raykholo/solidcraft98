@@ -13,6 +13,7 @@ Sub Main()
     frmSplash.Progress "Reticulating B-splines..."
     frmMain.Show
     RunCommand "New"
+    RemoteStart
     frmSplash.Progress "Ready."
     Unload frmSplash
 End Sub

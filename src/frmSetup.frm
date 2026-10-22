@@ -45,6 +45,12 @@ Option Explicit
 Private mPct As Double
 Private mStep As Integer
 
+' What a screen reader says about the picture.
+Public Function ReadOut() As String
+    ReadOut = "Copying C:\WINDOWS\SYSTEM\MSCOMCTL.OCX over C:\WINDOWS\SYSTEM\MSCOMCTL.OCX: " & _
+        Format$(IIf(mPct > 112, 112, mPct), "0") & "%. Please do not turn off your computer. (No buttons: it has to finish.)"
+End Function
+
 Private Sub Form_Load()
     mPct = 0
     mStep = 0
