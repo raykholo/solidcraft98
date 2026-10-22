@@ -14,6 +14,7 @@ Form=frmCalPin.frm
 Form=frmCredits.frm
 Module=modMain; modMain.bas
 Module=modRemote; modRemote.bas
+Module=modTutor; modTutor.bas
 Module=modCommands; modCommands.bas
 Module=modModel; modModel.bas
 Module=modKernel; modKernel.bas

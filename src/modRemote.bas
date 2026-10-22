@@ -127,6 +127,10 @@ Private mClient As Long
 Private mIn As String                    ' read but not yet run
 Private mBusy As Boolean
 Private mAnswerDue As Boolean
+Private mAnswer As String                ' what to say once settled, if not "ok"
+Private mOffer As String                 ' the step "yes" takes: offered by "how" or an error
+Private mTutorOffer As String            ' or, failing that, by the tutor line
+Private mTopKind As String               ' what's on top: "params", "msgbox", "window" or ""
 Private mSettleAt As Double
 Private mWaitUntil As Double
 
@@ -217,6 +221,7 @@ Private Sub ReadSocket()
         ws_ioctlsocket mClient, FIONBIO, nb
         mIn = ""
         mAnswerDue = False
+        mAnswer = ""
         frmMain.SetStatus "Remote control: connected."
     End If
     Do
@@ -259,7 +264,8 @@ Public Sub RemoteTick(ByVal hWnd As Long, ByVal uMsg As Long, ByVal idEvent As L
     If mAnswerDue Then
         If Timer < mSettleAt Then GoTo Done
         mAnswerDue = False
-        Say "ok"
+        If Len(mAnswer) Then Say mAnswer Else Say "ok"
+        mAnswer = ""
     End If
     If NextLine(l) Then RemoteDo l
 Done:
@@ -472,6 +478,33 @@ Private Function FindTarget(ByVal nm As String, x As Long, y As Long) As Boolean
     For i = 0 To mTgN - 1
         If Left$(mTgName(i), Len(want)) = want Then x = mTgX(i): y = mTgY(i): FindTarget = True: Exit Function
     Next i
+End Function
+
+' The name on the screen nearest to one that isn't there, or "".
+Private Function NearestTarget(ByVal nm As String) As String
+    Dim i As Long, want As String, best As Long, d As Long
+    want = NormName(nm)
+    best = 99
+    For i = 0 To mTgN - 1
+        If LooksLike(want, mTgName(i)) Then
+            d = EditDistance(want, mTgName(i))
+            If d < best Then best = d: NearestTarget = mTgName(i)
+        End If
+    Next i
+End Function
+
+' An offer: remembered for "yes", and said so.
+Private Function Offer(ByVal sStep As String) As String
+    If Len(sStep) = 0 Then Exit Function
+    mOffer = sStep
+    Offer = " Say ""yes"" to do: " & sStep
+End Function
+
+' What the help index says about these words, if anything: " (how fillet) ..."
+Private Function HelpFor(ByVal sWords As String) As String
+    Dim k As Long
+    k = BestTopic(sWords)
+    If k >= 0 Then HelpFor = " Help: " & TopicText(k) & Offer(TopicStep(k))
 End Function
 
 Private Function Clean(ByVal s As String) As String
@@ -819,6 +852,7 @@ Public Function DescribeScreen() As String
     tid = GetCurrentThreadId()
     fg = GetForegroundWindow()
     first = True
+    mTopKind = ""
     h = GetWindow(GetDesktopWindow(), GW_CHILD)
     Do While h <> 0
         If IsWindowVisible(h) Then
@@ -830,10 +864,12 @@ Public Function DescribeScreen() As String
                     ElseIf f.Name = "frmCalPin" Then
                         r = r & DescribeForm(f, False, "A note is pinned in the corner of the main window:")
                     ElseIf Not f Is frmMain Then
+                        If first Then mTopKind = IIf(f.Name = "frmParams", "params", "window")
                         r = r & DescribeForm(f, first)
                         first = False
                     End If
                 ElseIf WinClass(h) = "#32770" Then
+                    If first Then mTopKind = "msgbox"
                     r = r & DescribeSystemDialog(h, first)
                     first = False
                 End If
@@ -843,7 +879,62 @@ Public Function DescribeScreen() As String
     Loop
     If Not first Then r = r & "Underneath: the main window." & vbCrLf
     r = r & DescribeMain()
-    DescribeScreen = r
+    DescribeScreen = r & TutorLine()
+End Function
+
+' What to do here, as a screen reader's tutor message would say it, and the
+' obvious next step, if there is one, for "yes".
+Private Function TutorLine() As String
+    Dim t As String, act As Form, f As Form, n As Long, sStep As String
+    Select Case mTopKind
+    Case "params"
+        t = "This dialog wants numbers. The field with the focus is all selected, so typing replaces it. " & _
+            "key tab goes to the next field, key enter is OK, key esc is Cancel. Numbers only, no units."
+    Case "msgbox"
+        t = "A message box. Read it, then click one of its buttons."
+    Case "window"
+        t = "This window is on top. Close it ([x], OK or Close) to get back to the part."
+    Case Else
+        If MenuIsOpen() Then
+            t = "A menu is open. Click one of its items, or key esc to close it."
+        ElseIf HotTitle() >= 0 Then
+            t = "The menu bar is active, so the part doesn't get keys. key esc leaves it."
+        Else
+            On Error Resume Next
+            Set act = frmMain.ActiveForm
+            On Error GoTo 0
+            If act Is Nothing Then
+                t = "No part is open. menu File > New starts one."
+                sStep = "menu File > New"
+            ElseIf Not TypeOf act Is frmPart Then
+                t = "No part is open. menu File > New starts one."
+                sStep = "menu File > New"
+            Else
+                n = Docs(act.DocIndex).Count
+                If n = 0 Then
+                    t = "This part is empty. Every solid starts as a flat sketch: menu Sketch > Rectangle... or menu Sketch > Circle..., and then menu Features > Extrude... makes it solid."
+                Else
+                    Select Case Docs(act.DocIndex).Features(n).Kind
+                    Case FK_SKETCH_RECT, FK_SKETCH_CIRCLE
+                        t = FeatureName(Docs(act.DocIndex), n) & " is a flat sketch. menu Features > Extrude... makes it solid."
+                        sStep = "menu Features > Extrude..."
+                    Case Else
+                        t = "To change a feature, dblclick it in the timeline."
+                    End Select
+                End If
+                For Each f In Forms
+                    If f.Name = "frmCal" Then
+                        If f.Visible Then t = t & " Cal is only a helper: any of Cal's buttons sends Cal away."
+                    End If
+                Next f
+            End If
+        End If
+        t = t & " ""how <words>"" looks things up, e.g. how hole."
+    End Select
+    mTutorOffer = sStep
+    If Len(mOffer) Then sStep = mOffer
+    If Len(sStep) Then t = t & " Say ""yes"" to do: " & sStep
+    TutorLine = "Tutor: " & t & vbCrLf
 End Function
 
 Private Function FormOf(ByVal h As Long) As Form
@@ -857,8 +948,8 @@ End Function
 
 Private Function HelpText() As String
     HelpText = "Commands: look | click <name> or <x> <y> | dblclick <name> or <x> <y> | rclick <name> or <x> <y>" & vbCrLf & _
-        "drag <x1> <y1> <x2> <y2> [right] | menu <title> > <item> | key <keys> (e, ctrl+s, enter, esc, tab, f5)" & vbCrLf & _
-        "type <text> | wait <ms> | help | quit"
+        "drag <x1> <y1> <x2> <y2> [right] | menu <title> (opens it) or menu <title> > <item> | key <keys> (e, ctrl+s, enter, esc, tab, f5)" & vbCrLf & _
+        "type <text> | wait <ms> | how <words> (looks up how to do something) | yes (takes the step offered) | help | quit"
 End Function
 
 ' A menu title, or (with a menu open) one of its items: picked with the
@@ -914,6 +1005,7 @@ Private Sub RemoteDo(ByVal l As String)
     Dim cmd As String, rest As String, p As Long, x As Long, y As Long
     p = InStr(l, " ")
     If p Then cmd = LCase$(Left$(l, p - 1)): rest = Trim$(Mid$(l, p + 1)) Else cmd = LCase$(l)
+    If cmd <> "look" And cmd <> "help" And cmd <> "how" And cmd <> "yes" And cmd <> "" Then mOffer = ""
     Select Case cmd
     Case ""
         Exit Sub
@@ -923,6 +1015,23 @@ Private Sub RemoteDo(ByVal l As String)
     Case "help"
         Say HelpText()
         Exit Sub
+    Case "how"
+        Dim kTopic As Long
+        kTopic = BestTopic(rest)
+        If kTopic < 0 Then
+            Say "There's no help on """ & rest & """. Try: how " & Replace(TopicList(), ", ", ", how ") & "."
+        Else
+            Say TopicText(kTopic) & Offer(TopicStep(kTopic))
+        End If
+        Exit Sub
+    Case "yes"
+        Dim sDo As String
+        sDo = mOffer
+        If Len(sDo) = 0 Then sDo = mTutorOffer
+        mOffer = "": mTutorOffer = ""
+        If Len(sDo) = 0 Then Say "error: nothing has been offered, so there's nothing to say yes to.": Exit Sub
+        RemoteDo sDo
+        Exit Sub
     Case "click", "dblclick", "rclick"
         If Len(rest) = 0 Then Say "error: " & cmd & " what?": Exit Sub
         If Not XY(rest, x, y) Then
@@ -931,7 +1040,15 @@ Private Sub RemoteDo(ByVal l As String)
                 If MenuByName(rest) Then GoTo Queued
             End If
             If Not FindTarget(rest, x, y) Then
-                Say "error: there's nothing called """ & rest & """ on the screen. ""look"" lists what's there."
+                Dim sNear As String, sErr As String
+                sNear = NearestTarget(rest)
+                sErr = "error: there's nothing called """ & rest & """ on the screen."
+                If Len(sNear) Then
+                    sErr = sErr & " Did you mean """ & sNear & """?" & Offer(cmd & " " & sNear)
+                Else
+                    sErr = sErr & " ""look"" lists what's there." & HelpFor(rest)
+                End If
+                Say sErr
                 Exit Sub
             End If
         End If
@@ -947,7 +1064,12 @@ Private Sub RemoteDo(ByVal l As String)
         AddStep "DRAG " & CLng(v(0)) & " " & CLng(v(1)) & " " & CLng(v(2)) & " " & CLng(v(3)) & " " & IIf(bR, "R", "L")
     Case "menu"
         p = InStr(rest, ">")
-        If p = 0 Then Say "error: say ""menu <title> > <item>"", e.g. ""menu File > Open..."".": Exit Sub
+        If p = 0 Then
+            ' just the title: open it, and "look" reads what's in it
+            If Not ForegroundIsMain() Then Say "error: a dialog or message box is open, and it has to close before the menus work.": Exit Sub
+            If Not MenuByName(rest) Then Say "error: there's no menu called """ & rest & """.": Exit Sub
+            GoTo Queued
+        End If
         If Not MenuPath(Trim$(Left$(rest, p - 1)), Trim$(Mid$(rest, p + 1))) Then Exit Sub
     Case "key"
         If Len(rest) = 0 Then Say "error: key what? e.g. ""key enter"".": Exit Sub
@@ -966,7 +1088,20 @@ Private Sub RemoteDo(ByVal l As String)
         Say "bye"
         ExitProcess 0                    ' at once: no questions, nothing saved
     Case Else
-        Say "error: """ & cmd & """ isn't a command. " & HelpText()
+        Dim sLike As String
+        Select Case cmd
+        Case "select", "choose", "pick", "tap", "hit", "push", "open", "activate": sLike = "click"
+        Case "doubleclick", "double-click", "double_click": sLike = "dblclick"
+        Case "rightclick", "right-click": sLike = "rclick"
+        Case "write", "enter", "input", "fill", "set": sLike = "type"
+        Case "press", "hotkey", "shortcut": sLike = "key"
+        Case "finish", "finished", "stop", "end": sLike = ""
+        End Select
+        If Len(sLike) And Len(rest) Then
+            Say "error: """ & cmd & """ isn't a command. Did you mean """ & sLike & " " & rest & """?" & Offer(sLike & " " & rest)
+        Else
+            Say "error: """ & cmd & """ isn't a command. " & HelpText()
+        End If
         Exit Sub
     End Select
 Queued:
@@ -996,12 +1131,57 @@ Private Function MenuPath(ByVal sTitle As String, ByVal sItem As String) As Bool
                         End If
                     End If
                 Next k
-                Say "error: the " & Clean(MenuText(hBar, i)) & " menu has no """ & sItem & """."
+                ' as a person would: open it, read down it, and leave it open
+                If MenuIsOpen() Or HotTitle() >= 0 Then QueueKey 27: QueueKey 27
+                OpenMenu hBar, i
+                mAnswer = "error: the " & Clean(MenuText(hBar, i)) & " menu has no """ & sItem & """. It has: " & MenuItems(hSub) & "."
+                MenuPath = True
+                For k = 0 To GetMenuItemCount(hSub) - 1
+                    s = MenuText(hSub, k)
+                    If InStr(s, vbTab) Then s = Left$(s, InStr(s, vbTab) - 1)
+                    If Len(s) Then
+                        If LooksLike(NormName(sItem), NormName(s)) Then
+                            mAnswer = mAnswer & " Did you mean " & Clean(s) & "?" & Offer("menu " & Clean(MenuText(hBar, i)) & " > " & Clean(s))
+                            Exit Function
+                        End If
+                    End If
+                Next k
+                mAnswer = mAnswer & HelpFor(sItem)
+                MenuPath = True
                 Exit Function
             End If
         End If
     Next i
-    Say "error: there's no menu called """ & sTitle & """."
+    ' not that menu: is the item in another one?
+    For i = 0 To GetMenuItemCount(hBar) - 1
+        hSub = GetSubMenu(hBar, i)
+        For k = 0 To GetMenuItemCount(hSub) - 1
+            s = MenuText(hSub, k)
+            If InStr(s, vbTab) Then s = Left$(s, InStr(s, vbTab) - 1)
+            If Len(s) And Len(sItem) Then
+                If Left$(NormName(s), Len(NormName(sItem))) = NormName(sItem) Then
+                    Say "error: there's no menu called """ & sTitle & """, but the " & Clean(MenuText(hBar, i)) & " menu has """ & Clean(s) & """." & _
+                        Offer("menu " & Clean(MenuText(hBar, i)) & " > " & Clean(s))
+                    Exit Function
+                End If
+            End If
+        Next k
+    Next i
+    Say "error: there's no menu called """ & sTitle & """. The menus are: " & MenuItems(hBar) & "." & HelpFor(sItem)
+End Function
+
+' "Extrude... (E), Revolve... (V), Hole... (H)": what's in a menu, as it reads.
+Private Function MenuItems(ByVal hSub As Long) As String
+    Dim k As Long, s As String, r As String, t As Long
+    For k = 0 To GetMenuItemCount(hSub) - 1
+        s = MenuText(hSub, k)
+        If Len(s) Then
+            t = InStr(s, vbTab)
+            If t Then s = Clean(Left$(s, t - 1)) & " (" & Mid$(s, t + 1) & ")" Else s = Clean(s)
+            r = r & IIf(Len(r), ", ", "") & s
+        End If
+    Next k
+    MenuItems = r
 End Function
 
 Private Function ForegroundIsMain() As Boolean

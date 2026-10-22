@@ -38,6 +38,9 @@ Const SETTLE_TIME = 0.25           ' seconds the screen gets to catch up
 Dim Shared RemoteIn As String       ' read but not yet run
 Dim Shared RemoteEOF As Boolean
 Dim Shared RemoteAnswerDue As Boolean
+Dim Shared RemoteAnswer As String   ' what to say once settled, if not "ok"
+Dim Shared RemoteOffer As String    ' the step "yes" takes: offered by "how" or an error
+Dim Shared TutorOffer As String     ' or, failing that, by the tutor line
 Dim Shared RemoteSettle As Double
 Dim Shared RemoteWaitUntil As Double
 
@@ -125,6 +128,42 @@ Function FindTarget(ByRef nm As String, ByRef x As Long, ByRef y As Long) As Boo
         If Left(Tg(i).nm, Len(want)) = want Then x = Tg(i).x: y = Tg(i).y: Return True
     Next
     Return False
+End Function
+
+' The name on the screen nearest to one that isn't there, or "".
+Function NearestTarget(ByRef nm As String) As String
+    Dim As String want = NormName(nm), r
+    Dim As Long i, d, best = 99
+    For i = 0 To TgN - 1
+        If LooksLike(want, Tg(i).nm) Then
+            d = EditDistance(want, Tg(i).nm)
+            If d < best Then best = d: r = Tg(i).nm
+        End If
+    Next
+    Return r
+End Function
+
+' An offer: remembered for "yes", and said so.
+Function Offer(ByRef sStep As String) As String
+    If Len(sStep) = 0 Then Return ""
+    RemoteOffer = sStep
+    Return " Say ""yes"" to do: " & sStep
+End Function
+
+' What the help index says about these words, if anything.
+Function HelpFor(ByRef words As String) As String
+    Dim As Long k = BestTopic(words)
+    If k < 0 Then Return ""
+    Return " Help: " & TopicTexts(k) & Offer(TopicSteps(k))
+End Function
+
+Function ReplaceAll(ByVal s As String, ByRef a As String, ByRef b As String) As String
+    Dim As Long p = InStr(s, a)
+    Do While p
+        s = Left(s, p - 1) & b & Mid(s, p + Len(a))
+        p = InStr(p + Len(b), s, a)
+    Loop
+    Return s
 End Function
 
 ' Lines joined with " / ", blank ones left out.
@@ -277,6 +316,54 @@ Function DescribePart(ByVal p As Long, ByVal isActive As Boolean) As String
     Return r
 End Function
 
+' What to do here, as a screen reader's tutor message would say it, and the
+' obvious next step, if there is one, for "yes".
+Function TutorLine() As String
+    Dim As String t, sStep
+    Dim As Long i
+    If DlgTop >= 0 Then
+        Dim As TDlg Ptr d = DlgStack(DlgTop)
+        Dim As Boolean hasEdit, hasCustom
+        For i = 0 To d->nCtl - 1
+            If d->c(i).kind = CT_EDIT And Not d->c(i).hidden Then hasEdit = True
+            If d->c(i).kind = CT_CUSTOM Or d->c(i).kind = CT_LIST Then hasCustom = True
+        Next
+        If hasEdit Then
+            t = "This dialog wants numbers. The field with the focus is all selected, so typing replaces it. " & _
+                "key tab goes to the next field, key enter is OK, key esc is Cancel. Numbers only, no units."
+        ElseIf hasCustom Or d->readOutFn <> 0 Then
+            t = "This window is on top. Close it ([x], OK or Close) to get back to the part."
+        Else
+            t = "A message box. Read it, then click one of its buttons."
+        End If
+    ElseIf OpenMenu >= 0 Then
+        t = "A menu is open. Click one of its items, or key esc to close it."
+    Else
+        Dim As Long p = ActivePart()
+        If p = 0 Then
+            t = "No part is open. menu File > New starts one."
+            sStep = "menu File > New"
+        Else
+            Dim As TDesign Ptr dd = @Docs(Parts(p).slot)
+            Dim As Long n = dd->Count
+            If n = 0 Then
+                t = "This part is empty. Every solid starts as a flat sketch: menu Sketch > Rectangle... or menu Sketch > Circle..., and then menu Features > Extrude... makes it solid."
+            ElseIf dd->F(n).Kind = FK_SKETCH_RECT Or dd->F(n).Kind = FK_SKETCH_CIRCLE Then
+                t = FeatureName(*dd, n) & " is a flat sketch. menu Features > Extrude... makes it solid."
+                sStep = "menu Features > Extrude..."
+            Else
+                t = "To change a feature, dblclick it in the timeline."
+            End If
+            If CalVisible Then t &= " Cal is only a helper: any of Cal's buttons sends Cal away."
+        End If
+        t &= " ""how <words>"" looks things up, e.g. how hole."
+    End If
+    TutorOffer = sStep
+    If Len(RemoteOffer) Then sStep = RemoteOffer
+    If Len(sStep) Then t &= " Say ""yes"" to do: " & sStep
+    Return "Tutor: " & t & Chr(10)
+End Function
+
 Function DescribeScreen() As String
     Dim As String r
     Dim As Long i, x, y, w, h
@@ -290,7 +377,7 @@ Function DescribeScreen() As String
         Next
         r &= "Underneath: the main window, which can't be used until the dialog closes." & Chr(10)
         r &= "Status bar: " & StatusMsg & Chr(10)
-        Return r
+        Return r & TutorLine()
     End If
     ' the menu bar, and the open menu
     r &= "Menu bar:"
@@ -345,15 +432,15 @@ Function DescribeScreen() As String
         AddTarget "close note", bx + 8, by + 7
     End If
     r &= "Status bar: " & StatusMsg & IIf(Len(StatusFps), "   (" & StatusFps & ")", "") & "   Clock: " & ClockText & Chr(10)
-    Return r
+    Return r & TutorLine()
 End Function
 
 ' ---- running commands ----
 
 Function RemoteHelp() As String
     Return "Commands: look | click <name> or <x> <y> | dblclick <name> or <x> <y> | rclick <name> or <x> <y>" & Chr(10) & _
-        "drag <x1> <y1> <x2> <y2> [right] | menu <title> > <item> | key <keys> (e, ctrl+s, enter, esc, tab, f5)" & Chr(10) & _
-        "type <text> | wait <ms> | shot <file.bmp> | help | quit"
+        "drag <x1> <y1> <x2> <y2> [right] | menu <title> (opens it) or menu <title> > <item> | key <keys> (e, ctrl+s, enter, esc, tab, f5)" & Chr(10) & _
+        "type <text> | wait <ms> | shot <file.bmp> | how <words> (looks up how to do something) | yes (takes the step offered) | help | quit"
 End Function
 
 ' click/dblclick/rclick take a name, or x and y.
@@ -382,6 +469,7 @@ Sub RemoteDo(ByRef l As String)
     Dim As Long x, y
     Dim As String e
     LogLine "remote: " & l
+    If cmd <> "look" And cmd <> "help" And cmd <> "how" And cmd <> "yes" And cmd <> "" Then RemoteOffer = ""
     Select Case cmd
     Case ""
         Exit Sub
@@ -391,9 +479,33 @@ Sub RemoteDo(ByRef l As String)
     Case "help"
         RemoteSay RemoteHelp()
         Exit Sub
+    Case "how"
+        Dim As Long kTopic = BestTopic(rest)
+        If kTopic < 0 Then
+            Dim As String tl = TopicList()
+            RemoteSay "There's no help on """ & Trim(rest) & """. Try: how " & ReplaceAll(tl, ", ", ", how ") & "."
+        Else
+            RemoteSay TopicTexts(kTopic) & Offer(TopicSteps(kTopic))
+        End If
+        Exit Sub
+    Case "yes"
+        Dim As String sDo = IIf(Len(RemoteOffer), RemoteOffer, TutorOffer)
+        RemoteOffer = "": TutorOffer = ""
+        If Len(sDo) = 0 Then RemoteSay "error: nothing has been offered, so there's nothing to say yes to.": Exit Sub
+        RemoteDo sDo
+        Exit Sub
     Case "click", "dblclick", "rclick"
         If Len(Trim(rest)) = 0 Then RemoteSay "error: " & cmd & " what?": Exit Sub
-        If Not TargetXY(rest, x, y, e) Then RemoteSay e: Exit Sub
+        If Not TargetXY(rest, x, y, e) Then
+            Dim As String sNear = NearestTarget(rest)
+            If Len(sNear) Then
+                e = "error: there's nothing called """ & Trim(rest) & """ on the screen. Did you mean """ & sNear & """?" & Offer(cmd & " " & sNear)
+            Else
+                e &= HelpFor(rest)
+            End If
+            RemoteSay e
+            Exit Sub
+        End If
         RemoteClick x, y, IIf(cmd = "rclick", 2, 1), cmd = "dblclick"
     Case "drag"
         Dim As Long x1 = Val(NextWord(rest)), y1 = Val(NextWord(rest)), x2 = Val(NextWord(rest)), y2 = Val(NextWord(rest)), i
@@ -406,26 +518,62 @@ Sub RemoteDo(ByRef l As String)
     Case "menu"
         If DlgTop >= 0 Then RemoteSay "error: a dialog is open, and it has to close before the menus work.": Exit Sub
         Dim As Long gt = InStr(rest, ">")
-        If gt = 0 Then RemoteSay "error: say ""menu <title> > <item>"", e.g. ""menu File > Open..."".": Exit Sub
-        Dim As String tName = NormName(Left(rest, gt - 1)), iName = NormName(Mid(rest, gt + 1))
-        Dim As Long m = -1, k
+        Dim As String sTitle = Trim(IIf(gt, Left(rest, gt - 1), rest)), sItem = IIf(gt, Trim(Mid(rest, gt + 1)), "")
+        Dim As String iName = NormName(sItem)
+        Dim As Long m = -1, k, mm
         For k = 0 To 6
-            If NormName(MenuTitles(k)) = tName Then m = k
+            If NormName(MenuTitles(k)) = NormName(sTitle) Then m = k
         Next
-        If m < 0 Then RemoteSay "error: there's no menu called """ & Trim(Left(rest, gt - 1)) & """.": Exit Sub
+        If m < 0 Then
+            ' not that menu: is the item in another one?
+            If gt Then
+                For mm = 0 To 6
+                    For k = 0 To ItemsIn(mm) - 1
+                        Dim it0 As TMenuItem = MenuItemAt(mm, k)
+                        If it0.caption <> "-" AndAlso Len(iName) AndAlso Left(NormName(it0.caption), Len(iName)) = iName Then
+                            RemoteSay "error: there's no menu called """ & sTitle & """, but the " & AmpStrip(MenuTitles(mm)) & " menu has """ & AmpStrip(it0.caption) & """." & _
+                                Offer("menu " & AmpStrip(MenuTitles(mm)) & " > " & AmpStrip(it0.caption))
+                            Exit Sub
+                        End If
+                    Next
+                Next
+            End If
+            Dim As String bar
+            For k = 0 To 6
+                bar &= IIf(k, ", ", "") & AmpStrip(MenuTitles(k))
+            Next
+            RemoteSay "error: there's no menu called """ & sTitle & """. The menus are: " & bar & "." & HelpFor(sItem)
+            Exit Sub
+        End If
         Dim As Long dx, dy, dw, dh, iy, hit = -1
         DropRect m, dx, dy, dw, dh
         iy = dy + 3
         For k = 0 To ItemsIn(m) - 1
             Dim it As TMenuItem = MenuItemAt(m, k)
             If it.caption = "-" Then iy += 8: Continue For
-            If hit < 0 AndAlso Left(NormName(it.caption), Len(iName)) = iName Then hit = k: x = dx + 20: y = iy + 8
+            If hit < 0 AndAlso Len(iName) AndAlso Left(NormName(it.caption), Len(iName)) = iName Then hit = k: x = dx + 20: y = iy + 8
             iy += 17
         Next
-        If hit < 0 Then RemoteSay "error: the " & AmpStrip(MenuTitles(m)) & " menu has no """ & Trim(Mid(rest, gt + 1)) & """.": Exit Sub
         If OpenMenu >= 0 Then QueueKeyCombo "esc"
         RemoteClick (MenuX(m) + MenuX(m + 1)) \ 2, TitleH + MENU_H \ 2, 1, False
-        RemoteClick x, y, 1, False
+        If gt > 0 AndAlso hit < 0 Then
+            ' as a person would: open it, read down it, and leave it open
+            Dim As String has, near
+            For k = 0 To ItemsIn(m) - 1
+                Dim it2 As TMenuItem = MenuItemAt(m, k)
+                If it2.caption = "-" Then Continue For
+                has &= IIf(Len(has), ", ", "") & AmpStrip(it2.caption) & IIf(Len(it2.shortcut), " (" & it2.shortcut & ")", "")
+                If Len(near) = 0 AndAlso LooksLike(iName, NormName(it2.caption)) Then near = AmpStrip(it2.caption)
+            Next
+            RemoteAnswer = "error: the " & AmpStrip(MenuTitles(m)) & " menu has no """ & sItem & """. It has: " & has & "."
+            If Len(near) Then
+                RemoteAnswer &= " Did you mean " & near & "?" & Offer("menu " & AmpStrip(MenuTitles(m)) & " > " & near)
+            Else
+                RemoteAnswer &= HelpFor(sItem)
+            End If
+        ElseIf gt > 0 Then
+            RemoteClick x, y, 1, False
+        End If
     Case "key"
         If Len(Trim(rest)) = 0 Then RemoteSay "error: key what? e.g. ""key enter"".": Exit Sub
         Dim As String one
@@ -444,7 +592,19 @@ Sub RemoteDo(ByRef l As String)
         RemoteSay "bye"
         End 0
     Case Else
-        RemoteSay "error: """ & cmd & """ isn't a command. " & RemoteHelp()
+        Dim As String sLike
+        Select Case cmd
+        Case "select", "choose", "pick", "tap", "hit", "push", "open", "activate": sLike = "click"
+        Case "doubleclick", "double-click", "double_click": sLike = "dblclick"
+        Case "rightclick", "right-click": sLike = "rclick"
+        Case "write", "enter", "input", "fill", "set": sLike = "type"
+        Case "press", "hotkey", "shortcut": sLike = "key"
+        End Select
+        If Len(sLike) AndAlso Len(Trim(rest)) Then
+            RemoteSay "error: """ & cmd & """ isn't a command. Did you mean """ & sLike & " " & Trim(rest) & """?" & Offer(sLike & " " & Trim(rest))
+        Else
+            RemoteSay "error: """ & cmd & """ isn't a command. " & RemoteHelp()
+        End If
         Exit Sub
     End Select
     RemoteAnswerDue = True
@@ -459,7 +619,8 @@ Sub RemoteStep()
     If RemoteAnswerDue Then
         If Timer < RemoteSettle Or Len(ShotRequested) > 0 Then Exit Sub
         RemoteAnswerDue = False
-        RemoteSay "ok"
+        RemoteSay IIf(Len(RemoteAnswer), RemoteAnswer, "ok")
+        RemoteAnswer = ""
     End If
     Dim As String l
     If NextRemoteLine(l) Then
