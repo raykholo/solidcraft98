@@ -439,7 +439,8 @@ End Sub
 Private Function NormName(ByVal s As String) As String
     Dim t As String
     t = LCase$(Trim$(Replace(s, "&", "")))
-    If Left$(t, 1) = """" And Right$(t, 1) = """" And Len(t) >= 2 Then t = Mid$(t, 2, Len(t) - 2)
+    If Left$(t, 1) = """" And Right$(t, 1) = """" And Len(t) >= 2 Then t = Trim$(Mid$(t, 2, Len(t) - 2))
+    If Left$(t, 1) = "[" And Right$(t, 1) = "]" And Len(t) >= 2 Then t = Trim$(Mid$(t, 2, Len(t) - 2))
     If Right$(t, 3) = "..." Then t = RTrim$(Left$(t, Len(t) - 3))
     If Right$(t, 1) = ":" Then t = RTrim$(Left$(t, Len(t) - 1))
     NormName = t
@@ -619,6 +620,8 @@ NextCtl:
         Dim wr As RECT
         GetWindowRect f.hWnd, wr
         r = r & "  title bar close box [x]" & vbCrLf
+        AddTarget "x", wr.Right - 14, wr.Top + 12
+        AddTarget "close box", wr.Right - 14, wr.Top + 12
         AddTarget "close", wr.Right - 14, wr.Top + 12
     End If
     DescribeForm = r

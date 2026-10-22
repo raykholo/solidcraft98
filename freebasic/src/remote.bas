@@ -103,7 +103,8 @@ Function NormName(ByRef s As String) As String
     Dim As String t = LCase(Trim(AmpStrip(s)))
     If Right(t, 3) = "..." Then t = RTrim(Left(t, Len(t) - 3))
     If Right(t, 1) = ":" Then t = RTrim(Left(t, Len(t) - 1))
-    If Left(t, 1) = """" And Right(t, 1) = """" And Len(t) >= 2 Then t = Mid(t, 2, Len(t) - 2)
+    If Left(t, 1) = """" And Right(t, 1) = """" And Len(t) >= 2 Then t = Trim(Mid(t, 2, Len(t) - 2))
+    If Left(t, 1) = "[" And Right(t, 1) = "]" And Len(t) >= 2 Then t = Trim(Mid(t, 2, Len(t) - 2))
     Return t
 End Function
 
@@ -214,6 +215,8 @@ Function DescribeDialog(ByVal d As TDlg Ptr, ByVal isTop As Boolean) As String
     If Len(pending) Then r &= "  " & OneLine(pending) & Chr(10)
     If Not d->noFrame Then
         r &= "  title bar close box [x]" & Chr(10)
+        AddTarget "x", d->x + d->w - 13, d->y + 12
+        AddTarget "close box", d->x + d->w - 13, d->y + 12
         AddTarget "close", d->x + d->w - 13, d->y + 12
     End If
     Return r
