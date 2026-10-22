@@ -35,7 +35,7 @@ Begin VB.Form frmAbout
       Width           =   1095
    End
    Begin VB.Label lblInfo
-      Height          =   1335
+      Height          =   1560
       Left            =   1920
       TabIndex        =   3
       Top             =   1080

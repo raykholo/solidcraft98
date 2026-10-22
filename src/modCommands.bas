@@ -478,7 +478,7 @@ Private Function AskFeature(d As TDesign, ByVal i As Integer, f As TFeature) As 
 End Function
 
 Private Function PlacePrompts() As String
-    PlacePrompts = "On top of feature # (0 = ground)|Height above that (mm)"
+    PlacePrompts = "On feature # (0 = ground)|Height above that (mm)"
 End Function
 
 ' The "on top of" number must be 0 or an extrude that comes before this sketch.

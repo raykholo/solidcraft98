@@ -408,16 +408,3 @@ End Sub
 Private Sub mnuHelpItem_Click(Index As Integer)
     RunCommand mnuHelpItem(Index).Tag
 End Sub
-
-Private Sub MDIForm_QueryUnload(Cancel As Integer, UnloadMode As Integer)
-    Dim i As Integer, n As Integer
-    For i = 1 To MAX_DOCS
-        If DocInUse(i) And DocDirty(i) Then n = n + 1
-    Next i
-    If n > 0 Then
-        If MsgBox(n & " part(s) have unsaved changes." & vbCrLf & vbCrLf & _
-            "Exit SolidCraft 98 anyway?", vbQuestion Or vbYesNo Or vbDefaultButton2, App.Title) = vbNo Then
-            Cancel = 1
-        End If
-    End If
-End Sub

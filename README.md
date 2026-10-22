@@ -99,14 +99,14 @@ and a boss in the middle with a bore through it and the plate. About five
 minutes. (It's in `samples/Mounting Plate.sc98` if you'd rather look.)
 
 1. **The plate outline.** Press R (Sketch, Rectangle). Width 80, Height 50,
-   Corner X -40, Corner Y -25, Corner radius 6. Leave "On top of feature #"
+   Corner X -40, Corner Y -25, Corner radius 6. Leave "On feature #"
    at 0, which means the ground. OK.
 2. **The plate.** Press E (Extrude). Depth 6. OK.
 3. **Corner holes.** Press H (Hole). Diameter 5, Depth 0 (all the way
    through), Centre X -32, Centre Y -17. OK. Do it three more times at
    (32, -17), (32, 17) and (-32, 17).
 4. **The boss outline.** Press C (Sketch, Circle). Radius 10, Centre 0, 0.
-   "On top of feature #": 2, which is the plate's number in the # column
+   "On feature #": 2, which is the plate's number in the # column
    of the timeline. Height above that: 0. OK.
 5. **The boss.** Press E. Depth 15. OK.
 6. **The bore.** Press H. Diameter 10, Depth 0, Centre 0, 0. It goes on

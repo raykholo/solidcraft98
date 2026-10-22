@@ -275,6 +275,8 @@ Private Sub Form_Resize()
     If DocIndex <> 0 Then Redraw
 End Sub
 
+' Asks before closing a part with unsaved changes, also when the whole
+' program is closing: Cancel here stops the exit.
 Private Sub Form_QueryUnload(Cancel As Integer, UnloadMode As Integer)
     If DocIndex = 0 Then Exit Sub
     If DocDirty(DocIndex) Then
