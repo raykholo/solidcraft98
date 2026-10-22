@@ -107,6 +107,7 @@ Private Const MF_GRAYED As Long = &H1
 Private Const MF_CHECKED As Long = &H8
 Private Const MF_SEPARATOR As Long = &H800
 Private Const MF_HILITE As Long = &H80
+Private Const MOUSEEVENTF_MOVE As Long = &H1
 Private Const MOUSEEVENTF_LEFTDOWN As Long = &H2
 Private Const MOUSEEVENTF_LEFTUP As Long = &H4
 Private Const MOUSEEVENTF_RIGHTDOWN As Long = &H8
@@ -130,7 +131,7 @@ Private mSettleAt As Double
 Private mWaitUntil As Double
 
 ' The input still to send: one step per tick. "M x y" glides the pointer
-' there, "LD"/"LU"/"RD"/"RU" press and release a button, "KD vk"/"KU vk"
+' there, "LC"/"RC" click, "DRAG x1 y1 x2 y2 L|R" drags, "KD vk"/"KU vk"
 ' a key, "P ms" pauses.
 Private mSteps() As String
 Private mStepHead As Long
@@ -324,13 +325,30 @@ Private Sub RunStep()
             Next k
             keybd_event 13, 0, 0, 0: keybd_event 13, 0, KEYEVENTF_KEYUP, 0
         End If
-        mSkipClick = 2
-    Case "LD"
-        If mSkipClick > 0 Then mSkipClick = mSkipClick - 1 Else mouse_event MOUSEEVENTF_LEFTDOWN, 0, 0, 0, 0
-    Case "LU"
-        If mSkipClick > 0 Then mSkipClick = mSkipClick - 1 Else mouse_event MOUSEEVENTF_LEFTUP, 0, 0, 0, 0
-    Case "RD": mouse_event MOUSEEVENTF_RIGHTDOWN, 0, 0, 0, 0
-    Case "RU": mouse_event MOUSEEVENTF_RIGHTUP, 0, 0, 0, 0
+        mSkipClick = 1
+    Case "DRAG"
+        ' all in one go, Windows plays it back: a drag on a title bar starts
+        ' a loop that hands on no timers until the button comes up
+        Dim i As Long, x1 As Long, y1 As Long, x2 As Long, y2 As Long, bRt As Boolean
+        x1 = CLng(w(1)): y1 = CLng(w(2)): x2 = CLng(w(3)): y2 = CLng(w(4)): bRt = (w(5) = "R")
+        mouse_event IIf(bRt, MOUSEEVENTF_RIGHTDOWN, MOUSEEVENTF_LEFTDOWN), 0, 0, 0, 0
+        For i = 1 To 20
+            SetCursorPos x1 + (x2 - x1) * i \ 20, y1 + (y2 - y1) * i \ 20
+            mouse_event MOUSEEVENTF_MOVE, 0, 0, 0, 0
+        Next i
+        mouse_event IIf(bRt, MOUSEEVENTF_RIGHTUP, MOUSEEVENTF_LEFTUP), 0, 0, 0, 0
+    Case "LC"
+        ' a click, press and release together: pressing a title-bar button
+        ' starts a loop in Windows that hands on no timers until the release
+        If mSkipClick > 0 Then
+            mSkipClick = 0
+        Else
+            mouse_event MOUSEEVENTF_LEFTDOWN, 0, 0, 0, 0
+            mouse_event MOUSEEVENTF_LEFTUP, 0, 0, 0, 0
+        End If
+    Case "RC"
+        mouse_event MOUSEEVENTF_RIGHTDOWN, 0, 0, 0, 0
+        mouse_event MOUSEEVENTF_RIGHTUP, 0, 0, 0, 0
     Case "KD": keybd_event CByte(w(1)), CByte(MapVirtualKey(CLng(w(1)), 0)), 0, 0
     Case "KU": keybd_event CByte(w(1)), CByte(MapVirtualKey(CLng(w(1)), 0)), KEYEVENTF_KEYUP, 0
     Case "P"
@@ -344,9 +362,8 @@ End Sub
 Private Sub QueueClick(ByVal x As Long, ByVal y As Long, ByVal bRight As Boolean, ByVal bDouble As Boolean)
     AddStep "M " & x & " " & y
     AddStep "P 90"
-    AddStep IIf(bRight, "RD", "LD")
-    AddStep IIf(bRight, "RU", "LU")
-    If bDouble Then AddStep "LD": AddStep "LU"
+    AddStep IIf(bRight, "RC", "LC")
+    If bDouble Then AddStep "LC"
 End Sub
 
 Private Sub QueueKey(ByVal vk As Long)
@@ -882,8 +899,7 @@ End Function
 Private Sub OpenMenu(ByVal hBar As Long, ByVal i As Long)
     AddStep "MT " & i
     AddStep "P 90"
-    AddStep "LD"
-    AddStep "LU"
+    AddStep "LC"
     AddStep "P 250"
 End Sub
 
@@ -891,8 +907,7 @@ End Sub
 Private Sub PickItem(ByVal hSub As Long, ByVal i As Long)
     AddStep "MI " & hSub & " " & i
     AddStep "P 90"
-    AddStep "LD"
-    AddStep "LU"
+    AddStep "LC"
 End Sub
 
 Private Sub RemoteDo(ByVal l As String)
@@ -928,11 +943,8 @@ Private Sub RemoteDo(ByVal l As String)
         Dim bR As Boolean, k As Long
         If UBound(v) >= 4 Then bR = (LCase$(v(4)) = "right")
         AddStep "M " & v(0) & " " & v(1)
-        AddStep IIf(bR, "RD", "LD")
-        For k = 1 To 10
-            AddStep "M " & (CLng(v(0)) + (CLng(v(2)) - CLng(v(0))) * k \ 10) & " " & (CLng(v(1)) + (CLng(v(3)) - CLng(v(1))) * k \ 10)
-        Next k
-        AddStep IIf(bR, "RU", "LU")
+        AddStep "P 90"
+        AddStep "DRAG " & CLng(v(0)) & " " & CLng(v(1)) & " " & CLng(v(2)) & " " & CLng(v(3)) & " " & IIf(bR, "R", "L")
     Case "menu"
         p = InStr(rest, ">")
         If p = 0 Then Say "error: say ""menu <title> > <item>"", e.g. ""menu File > Open..."".": Exit Sub
