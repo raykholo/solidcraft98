@@ -41,7 +41,7 @@ SolidCraft 2000.</sub>
 
 ## Getting it
 
-Download `SolidCraft98-<version>.zip` (the newest is 1.1) from the
+Download `SolidCraft98-<version>.zip` (the newest is 1.1.1) from the
 [Releases page](../../releases), check its SHA-256 against the one listed
 there if you like, unzip it anywhere,
 and run `SolidCraft98.exe`. There's no installer and nothing to register:
