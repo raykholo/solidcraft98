@@ -1,0 +1,15 @@
+# Cal with Turbo on: "Don't show me this tip again" pins the tip; its x closes it
+wait 200
+click 336 37
+wait 100
+key r
+wait 100
+key enter
+wait 300
+shot tests/out/p01_cal.bmp
+click 670 535
+wait 200
+shot tests/out/p02_pinned.bmp
+click 763 530
+wait 200
+shot tests/out/p03_closed.bmp

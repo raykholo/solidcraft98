@@ -217,6 +217,8 @@ With Turbo on:
 - **"20mm" in a number box** escalates: Type mismatch, then Still a type
   mismatch, then "It's a TextBox, not a mind reader", then a tip about
   `Val()`. On the fifth try it gives up and takes 20.
+- **Cal's "Don't show me this tip again"** pins the tip in the corner
+  instead, so you won't miss it. Its x does close it.
 - **Dividing by zero** in a number box (they take arithmetic, so `40/0`)
   gets a full-screen blue fatal exception. Press any key; the part is fine.
   With Turbo off it's a plain run-time error 11.

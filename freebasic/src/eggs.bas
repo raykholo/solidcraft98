@@ -102,6 +102,10 @@ Dim Shared CalShown As Boolean
 Dim Shared CalSilenced As Boolean
 Dim Shared CalText As String
 Dim Shared CalStage As Long          ' 0 asking, 1 helped
+' With Turbo on, "don't show this again" pins the tip instead: a small note
+' where Cal was. Its x really closes it. Nothing is saved.
+Dim Shared CalPinned As Boolean
+Const PIN_W = 300, PIN_H = 40
 
 Const CAL_W = 300, CAL_H = 140
 
@@ -132,9 +136,30 @@ Function CalButtonText(ByVal b As Long) As String
     Return ""
 End Function
 
+Sub PinRect(ByRef x As Long, ByRef y As Long)
+    CalRect x, y
+    y += CAL_H - PIN_H
+End Sub
+
+Sub PinCloseRect(ByRef bx As Long, ByRef by As Long)
+    Dim As Long x, y
+    PinRect x, y
+    bx = x + PIN_W - 20: by = y + 4
+End Sub
+
 Sub DrawCal()
-    If Not CalVisible Then Exit Sub
     Dim As Long x, y, b, bx, by, bw
+    If CalPinned Then
+        PinRect x, y
+        Fill x, y, PIN_W, PIN_H, C_INFO
+        Frame x, y, PIN_W, PIN_H, C_DARK
+        Text x + 6, y + 6, "Cal's tip, pinned for you:", C_TEXT, True
+        Text x + 6, y + 6 + LINE_H, "Boxes want to be extruded. Press E.", C_TEXT
+        PinCloseRect bx, by
+        Fill bx, by, 16, 14, C_FACE: Bevel bx, by, 16, 14, BEV_BUTTON
+        Text bx + (16 - TextW("x")) \ 2, by + 2, "x", C_TEXT
+    End If
+    If Not CalVisible Then Exit Sub
     CalRect x, y
     Fill x, y, CAL_W, CAL_H, C_INFO
     Frame x, y, CAL_W, CAL_H, C_DARK
@@ -158,8 +183,19 @@ End Sub
 
 ' A click: True if it was on Cal.
 Function CalClick(ByVal mx As Long, ByVal my As Long) As Boolean
-    If Not CalVisible Then Return False
     Dim As Long x, y, b, bx, by, bw
+    If CalPinned And Not CalVisible Then
+        PinRect x, y
+        If mx < x Or mx >= x + PIN_W Or my < y Or my >= y + PIN_H Then Return False
+        PinCloseRect bx, by
+        If mx >= bx And mx < bx + 16 And my >= by And my < by + 14 Then
+            CalPinned = False
+            SetStatus "Cal will remember."
+            NeedRedraw = True
+        End If
+        Return True
+    End If
+    If Not CalVisible Then Return False
     CalRect x, y
     If mx < x Or mx >= x + CAL_W Or my < y Or my >= y + CAL_H Then Return False
     For b = 0 To 2
@@ -174,7 +210,12 @@ Function CalClick(ByVal mx As Long, ByVal my As Long) As Boolean
                 CalVisible = False
             Case 2
                 CalSilenced = True: CalVisible = False
-                MsgBox "OK. Cal won't show this tip again." & Chr(10) & "(Until you restart SolidCraft 98.)", MB_INFO, "Cal"
+                ' Turbo: the authentic 1999 reading of "don't show this again"
+                If Turbo Then
+                    CalPinned = True
+                Else
+                    MsgBox "OK. Cal won't show this tip again." & Chr(10) & "(Until you restart SolidCraft 98.)", MB_INFO, "Cal"
+                End If
             End Select
             NeedRedraw = True
             Return True

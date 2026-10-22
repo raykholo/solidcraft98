@@ -10,6 +10,7 @@ Form=frmFloppy.frm
 Form=frmFatal.frm
 Form=frmSetup.frm
 Form=frmCal.frm
+Form=frmCalPin.frm
 Form=frmCredits.frm
 Module=modMain; modMain.bas
 Module=modCommands; modCommands.bas

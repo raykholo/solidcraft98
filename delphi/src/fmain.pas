@@ -34,6 +34,7 @@ type
     FCalSay: TLabel;
     FCalHelp, FCalNoHelp: TButton;
     FCalShown, FCalSilenced: Boolean;
+    FCalPin: TPanel;
     function AddItem(AParent: TMenuItem; const ACaption, ACmd: string; AKey: TShortCut = 0; const AHint: string = ''): TMenuItem;
     procedure BuildMenus;
     procedure BuildToolbar;
@@ -55,6 +56,7 @@ type
     procedure CalHelpClick(Sender: TObject);
     procedure CalNoHelpClick(Sender: TObject);
     procedure CalNeverClick(Sender: TObject);
+    procedure CalPinClose(Sender: TObject);
     function KonamiKey(Key: Word): Boolean;
     procedure KonamiSpin(p: TPartWindow);
   public
@@ -449,6 +451,7 @@ begin
   begin
     p.BringToFront;
     if FCal.Visible then FCal.BringToFront;
+    if FCalPin.Visible then FCalPin.BringToFront;
   end;
   PartsChanged;
 end;
@@ -738,6 +741,7 @@ procedure TMainForm.BuildCal;
 var
   pb: TPaintBox;
   b: TButton;
+  l: TLabel;
 begin
   FCal := TPanel.Create(Self);
   FCal.Parent := FArea;
@@ -771,6 +775,31 @@ begin
   b.SetBounds(8, 140, 284, 22);
   b.Caption := '&Don''t show me this tip again';
   b.OnClick := @CalNeverClick;
+  // With Turbo on, "don't show this again" pins the tip instead. The x
+  // really closes it. Nothing is saved.
+  FCalPin := TPanel.Create(Self);
+  FCalPin.Parent := FArea;
+  FCalPin.Visible := False;
+  FCalPin.Width := 300; FCalPin.Height := 46;
+  FCalPin.Color := $E1FFFF;
+  FCalPin.BevelOuter := bvRaised;
+  FCalPin.Caption := '';
+  FCalPin.Anchors := [akRight, akBottom];
+  l := TLabel.Create(Self);
+  l.Parent := FCalPin;
+  l.SetBounds(6, 5, 264, 18);
+  l.Font.Style := [fsBold];
+  l.Caption := 'Cal''s tip, pinned for you:';
+  l := TLabel.Create(Self);
+  l.Parent := FCalPin;
+  l.SetBounds(6, 24, 288, 18);
+  l.Caption := 'Boxes want to be extruded. Press E.';
+  b := TButton.Create(Self);
+  b.Parent := FCalPin;
+  b.SetBounds(276, 4, 18, 16);
+  b.Caption := 'x';
+  b.TabStop := False;
+  b.OnClick := @CalPinClose;
 end;
 
 procedure TMainForm.CalPaint(Sender: TObject);
@@ -814,8 +843,22 @@ end;
 procedure TMainForm.CalNeverClick(Sender: TObject);
 begin
   FCalSilenced := True;
-  MsgBox('OK. Cal won''t show this tip again.' + LineEnding + '(Until you restart SolidCraft 98.)', MB_INFO, 'Cal');
   FCal.Visible := False;
+  // Turbo: the authentic 1999 reading of "don't show this again"
+  if Turbo then
+  begin
+    FCalPin.SetBounds(FArea.ClientWidth - FCalPin.Width - 12, FArea.ClientHeight - FCalPin.Height - 12, FCalPin.Width, FCalPin.Height);
+    FCalPin.Visible := True;
+    FCalPin.BringToFront;
+  end
+  else
+    MsgBox('OK. Cal won''t show this tip again.' + LineEnding + '(Until you restart SolidCraft 98.)', MB_INFO, 'Cal');
+end;
+
+procedure TMainForm.CalPinClose(Sender: TObject);
+begin
+  FCalPin.Visible := False;
+  SetStatusText('Cal will remember.');
 end;
 
 end.

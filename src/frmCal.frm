@@ -110,8 +110,13 @@ End Sub
 
 Private Sub cmdNever_Click()
     Silenced = True
-    MsgBox "OK. Cal won't show this tip again." & vbCrLf & "(Until you restart SolidCraft 98.)", vbInformation, "Cal"
     Unload Me
+    ' Turbo: the authentic 1999 reading of "don't show this again"
+    If Turbo Then
+        frmCalPin.Pin
+    Else
+        MsgBox "OK. Cal won't show this tip again." & vbCrLf & "(Until you restart SolidCraft 98.)", vbInformation, "Cal"
+    End If
 End Sub
 
 Private Sub picCal_Click()
