@@ -1,0 +1,259 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SolidCraft 98: The Definitive Guide</title>
+<link rel="stylesheet" href="manual.css">
+</head>
+<body>
+
+<section class="cover">
+  <div class="cover-top">
+    <div class="series">The Back Office Press Library</div>
+    <div class="edition">Covers Version 1.1.1</div>
+  </div>
+  <h1>SolidCraft 98</h1>
+  <div class="cover-sub">The Definitive Guide</div>
+  <div class="cover-tag">Parametric solid modelling, one rectangle at a time</div>
+  <svg class="cover-art" viewBox="0 0 400 260" role="img" aria-label="A mounting plate, drawn in wireframe">
+    <g fill="none" stroke="#ffd84a" stroke-width="1" opacity="0.35">
+      <path d="M0 200 L120 260 M0 160 L200 260 M0 120 L280 260 M0 80 L360 260 M400 200 L280 260 M400 160 L200 260 M400 120 L120 260 M400 80 L40 260"/>
+    </g>
+    <g stroke="#ffd84a" stroke-width="2.2" stroke-linejoin="round">
+      <!-- the plate: its faces filled, so what's behind them is hidden -->
+      <path fill="#1a2a5e" d="M40 150 L200 70 L360 150 L200 230 Z"/>
+      <path fill="#132250" d="M40 150 L200 230 L200 248 L40 168 Z"/>
+      <path fill="#0f1c44" d="M200 230 L360 150 L360 168 L200 248 Z"/>
+      <!-- three corner holes (the fourth is behind the boss) -->
+      <ellipse fill="#0b1433" cx="92" cy="150" rx="12" ry="6"/>
+      <ellipse fill="#0b1433" cx="308" cy="150" rx="12" ry="6"/>
+      <ellipse fill="#0b1433" cx="200" cy="204" rx="12" ry="6"/>
+      <!-- the boss: its side, then its top, then the bore -->
+      <path fill="#132250" d="M160 105 L160 150 A40 20 0 0 0 240 150 L240 105 Z"/>
+      <ellipse fill="#1a2a5e" cx="200" cy="105" rx="40" ry="20"/>
+      <ellipse fill="#0b1433" cx="200" cy="105" rx="20" ry="10"/>
+    </g>
+  </svg>
+  <div class="starburst"><span>Covers<br>Turbo!</span></div>
+  <ul class="cover-points">
+    <li>Sketch, extrude, revolve and drill</li>
+    <li>Change your mind afterwards</li>
+    <li>Export for Rapid Prototyping</li>
+    <li>What the Turbo button really does</li>
+  </ul>
+  <div class="cover-foot">
+    <span class="press">Back Office Press</span>
+    <span class="nocd">No CD-ROM included. It fits on a floppy.</span>
+  </div>
+</section>
+
+<section class="front">
+  <h2 class="plain">About this book</h2>
+  <p>SolidCraft 98 is a parametric CAD program for the desktop PC. You draw a flat shape, pull it
+  into a solid, and drill holes in it. Then you change any number you like, and the part follows.</p>
+  <p>This book is short on purpose. It shows you the screen, walks you through one real part from
+  start to finish, and then lets you get on with it. Every picture is a real screenshot, taken on
+  ReactOS at 800 &times; 600, which is the resolution SolidCraft 98 was meant for.</p>
+  <p>You need: a PC, SolidCraft 98 1.1.1, and about ten minutes.</p>
+  <h3>Contents</h3>
+  <ol class="toc">
+    <li><a href="#ch1">Getting it running</a></li>
+    <li><a href="#ch2">A tour of the screen</a></li>
+    <li><a href="#ch3">Your first part</a></li>
+    <li><a href="#ch4">Changing your mind</a></li>
+    <li><a href="#ch5">Shading it, and printing it</a></li>
+    <li><a href="#ch6">The Turbo button</a></li>
+    <li><a href="#ch7">Things to try</a></li>
+    <li><a href="#appA">Appendix: the keys</a></li>
+  </ol>
+</section>
+
+<section class="chapter" id="ch1">
+  <div class="chapnum">Chapter 1</div>
+  <h2>Getting it running</h2>
+  <p>Download <code>SolidCraft98-1.1.1.zip</code> from the
+  <a href="https://github.com/raykholo/solidcraft98/releases">Releases page</a>, unzip it anywhere,
+  and run <code>SolidCraft98.exe</code>. There's no installer and no setup program. (There is a
+  setup program, but it's not for installing. See Chapter 7.)</p>
+  <p>It runs on Windows 10 and 11 and on ReactOS. If you'd rather have it on a floppy, each release
+  also has a 1.44&nbsp;MB disk image.</p>
+  <div class="box tip"><b>Tip.</b> On Linux or a Raspberry Pi, get the Delphi Edition or the
+  FreeBASIC version from the same Releases page. Everything in this book works the same way in
+  them, and the files are the same files.</div>
+</section>
+
+<section class="chapter" id="ch2">
+  <div class="chapnum">Chapter 2</div>
+  <h2>A tour of the screen</h2>
+  <figure>
+    <img src="img/01-start.png" alt="SolidCraft 98 with a new, empty part">
+    <figcaption><b>Figure 2-1.</b> A new part. Nothing in it yet but a grid and some hope.</figcaption>
+  </figure>
+  <dl class="tour">
+    <dt>The toolbar</dt>
+    <dd>New, Open and Save; Sketch Rectangle and Sketch Circle; Extrude, Revolve and Hole; the views;
+    and, on the right, the Turbo button and its LED. Point at a button to see what it does.</dd>
+    <dt>The feature tree</dt>
+    <dd>On the left. Everything you make goes in here, in the order you made it.</dd>
+    <dt>The view</dt>
+    <dd>Your part, from the front, the right and above. Drag with the left mouse button to turn it
+    round, with the right button to slide it about, and press <kbd>+</kbd> or <kbd>-</kbd> to zoom.</dd>
+    <dt>The timeline</dt>
+    <dd>Along the bottom: every feature with its numbers. This is where you change your mind.</dd>
+    <dt>The status bar</dt>
+    <dd>What just happened, the units (always mm), and the time.</dd>
+  </dl>
+</section>
+
+<section class="chapter" id="ch3">
+  <div class="chapnum">Chapter 3</div>
+  <h2>Your first part</h2>
+  <p>We'll make a mounting plate: 80 &times; 50 &times; 6&nbsp;mm with round corners, a hole in each corner,
+  and a boss in the middle with a hole through it. You'll find the finished one in
+  <code>Samples\Mounting Plate.sc98</code> if you'd like to peek.</p>
+
+  <h3>The outline</h3>
+  <p>Press <kbd>R</kbd> for Sketch Rectangle. Every command asks for its numbers in the same kind of
+  box. Type a number, press <kbd>Tab</kbd> for the next one, and <kbd>Enter</kbd> when you're done.</p>
+  <figure>
+    <img src="img/02-rectangle.png" alt="The Sketch Rectangle dialog, filled in">
+    <figcaption><b>Figure 3-1.</b> Width 80, Height 50, Corner X &minus;40, Corner Y &minus;25,
+    Corner radius 6. Leave the rest at 0: the ground.</figcaption>
+  </figure>
+  <div class="box tip"><b>Tip.</b> Number boxes do arithmetic. <code>80/2</code> is 40, and
+  <code>25+3.5</code> is 28.5. They don't do units, and they'll tell you so.</div>
+
+  <h3>Meet Cal</h3>
+  <figure>
+    <img src="img/03-cal.png" alt="Cal, the caliper assistant, offering help with the box">
+    <figcaption><b>Figure 3-2.</b> Cal, the caliper assistant, has noticed you're drawing a box.</figcaption>
+  </figure>
+  <p>Cal pops up the first time you sketch a rectangle. Cal means well. Pick whichever button you
+  like; your rectangle is drawn either way.</p>
+
+  <h3>The plate</h3>
+  <p>Press <kbd>E</kbd> for Extrude, type <code>6</code>, and press <kbd>Enter</kbd>. The outline becomes a solid
+  plate, and Extrude1 appears in the tree and the timeline.</p>
+  <figure>
+    <img src="img/04-plate.png" alt="The plate, extruded">
+    <figcaption><b>Figure 3-3.</b> A plate. Already more than some people manage.</figcaption>
+  </figure>
+
+  <h3>The holes</h3>
+  <p>Press <kbd>H</kbd> for Hole. Diameter 5, Depth 0 (0 means all the way through), Centre X &minus;32,
+  Centre Y &minus;17. Do it three more times at (32,&nbsp;&minus;17), (32,&nbsp;17) and (&minus;32,&nbsp;17).</p>
+
+  <h3>The boss</h3>
+  <p>Press <kbd>C</kbd> for Sketch Circle: Radius 10, Centre 0,&nbsp;0. Set <i>On feature #</i> to 2, the
+  plate's number in the timeline's # column, so the circle sits on top of the plate. Then
+  <kbd>E</kbd> again, 15&nbsp;mm. Last, one more <kbd>H</kbd>: Diameter 10, Depth 0, Centre 0,&nbsp;0. It goes
+  into the boss, and because it goes all the way through, it carries on through the plate too.</p>
+  <figure>
+    <img src="img/05-part.png" alt="The finished mounting plate in wireframe, with its timeline">
+    <figcaption><b>Figure 3-4.</b> The finished part, and the timeline that made it.</figcaption>
+  </figure>
+  <p>Save it with <kbd>Ctrl</kbd>+<kbd>S</kbd>. Parts save as <code>.sc98</code> files, which only
+  SolidCraft 98 can read. This is traditional.</p>
+</section>
+
+<section class="chapter" id="ch4">
+  <div class="chapnum">Chapter 4</div>
+  <h2>Changing your mind</h2>
+  <p>Here's the clever bit. Every feature remembers its numbers, and everything built on it
+  follows when they change.</p>
+  <p>Double-click <b>Extrude1</b> in the timeline (or select it and press <kbd>Enter</kbd>). Make the
+  plate 8&nbsp;mm instead of 6, and press <kbd>Enter</kbd>.</p>
+  <figure>
+    <img src="img/06-edit.png" alt="Editing the plate's extrude from the timeline">
+    <figcaption><b>Figure 4-1.</b> Editing Extrude1. The boss will move up with the plate, and the bore
+    still goes all the way through.</figcaption>
+  </figure>
+  <p>Changed your mind about the change? <kbd>Ctrl</kbd>+<kbd>Z</kbd> takes off the last feature you
+  added, and <kbd>Del</kbd> deletes the selected one. If anything was built on it, SolidCraft 98 asks
+  first.</p>
+</section>
+
+<section class="chapter" id="ch5">
+  <div class="chapnum">Chapter 5</div>
+  <h2>Shading it, and printing it</h2>
+  <p>Press <kbd>S</kbd>. SolidCraft 98 works out every pixel of every face itself, then shows the
+  picture a few rows at a time, top to bottom, the way a good render should. Press <kbd>S</kbd> again
+  for wireframe.</p>
+  <figure>
+    <img src="img/07-shaded.png" alt="The mounting plate, shaded">
+    <figcaption><b>Figure 5-1.</b> Shaded. It takes a second or two, on purpose.</figcaption>
+  </figure>
+  <p>To 3D-print it, choose <b>File &rsaquo; Export for Rapid Prototyping (*.stl)</b>. You get an STL
+  file in millimetres that any slicer opens. Holes go all the way through, and the boss is joined to
+  the plate, so it prints as one solid.</p>
+</section>
+
+<section class="chapter" id="ch6">
+  <div class="chapnum">Chapter 6</div>
+  <h2>The Turbo button</h2>
+  <figure class="small">
+    <img src="img/08-turbo.png" alt="The Turbo button and its LED showing 33 MHz">
+    <figcaption><b>Figure 6-1.</b> Turbo on. Note the LED.</figcaption>
+  </figure>
+  <p>Like the button on the front of a 1990s PC. Press it and the LED changes from 66 to 33. That's
+  not a typo.</p>
+  <p>Turbo switches on the full 1999 experience. Some things get slower, some things get more
+  talkative, and a few things you wouldn't expect. With Turbo off, everything just works.</p>
+  <figure>
+    <img src="img/09-mismatch.png" alt="Run-time error 13, type mismatch">
+    <figcaption><b>Figure 6-2.</b> Typing <code>20mm</code> into a number box. Keep trying. It
+    gets more personal.</figcaption>
+  </figure>
+  <div class="box warn"><b>Watch out.</b> Nothing Turbo does touches your files, your clock or your
+  disk drives, and no part is ever lost. It only looks like it might.</div>
+</section>
+
+<section class="chapter" id="ch7">
+  <div class="chapnum">Chapter 7</div>
+  <h2>Things to try</h2>
+  <p>No spoilers. Just hints.</p>
+  <ul class="hints">
+    <li>Open <b>Help &rsaquo; About</b> and type the name of a famous operating system.</li>
+    <li>With Turbo on, Shift-click the logo in the About box. Then wait.</li>
+    <li>Try <b>File &rsaquo; Send To 3&frac12; Floppy (A:)</b>. Then try it with Turbo on.</li>
+    <li>Look at your part, and enter the code every 1990s gamer knows: &uarr; &uarr; &darr; &darr; &larr; &rarr; &larr; &rarr; B A.</li>
+    <li>Divide by zero in a number box, with Turbo on. Your part is fine. Promise.</li>
+    <li><b>File &rsaquo; Publish to Web</b>. Every part deserves a home page.</li>
+    <li>Start it with <code>/Y2KTEST</code>, turn on Turbo, and wait a minute.</li>
+  </ul>
+  <figure>
+    <img src="img/10-about.png" alt="The About box">
+    <figcaption><b>Figure 7-1.</b> The About box. Start here.</figcaption>
+  </figure>
+</section>
+
+<section class="chapter" id="appA">
+  <div class="chapnum">Appendix</div>
+  <h2>The keys</h2>
+  <table class="keys">
+    <tr><td><kbd>Ctrl</kbd>+<kbd>N</kbd> / <kbd>O</kbd> / <kbd>S</kbd></td><td>New, Open, Save</td></tr>
+    <tr><td><kbd>Ctrl</kbd>+<kbd>Z</kbd></td><td>Undo the last feature</td></tr>
+    <tr><td><kbd>R</kbd>, <kbd>C</kbd></td><td>Sketch a rectangle, a circle</td></tr>
+    <tr><td><kbd>E</kbd>, <kbd>V</kbd>, <kbd>H</kbd></td><td>Extrude, Revolve, Hole</td></tr>
+    <tr><td><kbd>I</kbd>, <kbd>F</kbd></td><td>Isometric view, Zoom to fit</td></tr>
+    <tr><td><kbd>S</kbd></td><td>Shaded (again for wireframe)</td></tr>
+    <tr><td><kbd>Enter</kbd>, or double-click</td><td>Edit the selected feature</td></tr>
+    <tr><td><kbd>Del</kbd></td><td>Delete the selected feature</td></tr>
+    <tr><td><kbd>+</kbd> / <kbd>-</kbd></td><td>Zoom in, zoom out</td></tr>
+    <tr><td><kbd>F5</kbd></td><td>Regenerate</td></tr>
+    <tr><td><kbd>F1</kbd></td><td>Help (it isn't installed)</td></tr>
+  </table>
+</section>
+
+<section class="back">
+  <p class="blurb">"It's a joke, but it works."</p>
+  <p>SolidCraft 98 is a parametric CAD program written the way it would have been in 1999. This
+  is the book that came in the box. Well, it would have.</p>
+  <p class="legal">SolidCraft 98 is a parody. It isn't affiliated with, endorsed by, or a
+  replacement for SolidCraft. Back Office Press is as real as the Turbo button. Text and pictures
+  MIT licensed, like the program.</p>
+</section>
+
+</body>
+</html>

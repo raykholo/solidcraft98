@@ -65,6 +65,14 @@ byte, in two more languages from the period (or near enough). Both are on the
 | [Delphi Edition](delphi/) | Windows, ReactOS, Linux, Raspberry Pi | Object Pascal (Free Pascal and Lazarus) | `SolidCraft98-Delphi-1.1.1.zip` |
 | [Linux and Raspberry Pi](freebasic/) | Linux, and a Raspberry Pi from 2014 (ARMv6) | FreeBASIC, every pixel drawn by hand | `SolidCraft98-Linux-1.1.1.tar.gz` |
 
+## The book
+
+[SolidCraft 98: The Definitive Guide](docs/manual/SolidCraft98-Definitive-Guide.pdf)
+is the short, picture-heavy manual that would have come in the box: a tour
+of the screen, your first part from start to finish, the Turbo button, and
+a few hints. It's also a web page, `docs/manual/index.html`, to open in any
+browser.
+
 ## What it can't do yet
 
 - Sketches are rectangles and circles, flat, facing up. Revolve turns them

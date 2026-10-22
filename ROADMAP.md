@@ -28,3 +28,5 @@ Nothing new is planned. What comes next, if anything, is from the list below.
 - Sketches on side faces, not just facing up.
 - A real undo and redo history.
 - Fillets and chamfers on top edges.
+- A Motif Edition: the same program in C with Motif, for X11 on Linux and the Raspberry Pi,
+  looking like the Unix workstation down the hall.
