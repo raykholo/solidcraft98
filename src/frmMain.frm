@@ -341,8 +341,16 @@ End Sub
 
 Private Sub tmrClock_Timer()
     ClockTick
-    StatusSet picStatus, "clock", Format$(ClockNow(), "h:nn AM/PM")
+    StatusSet picStatus, "clock", ClockText(ClockNow())
 End Sub
+
+' "1:05 PM". Built by hand: Format$'s AM/PM gives "13:05 PM" on some systems.
+Private Function ClockText(ByVal t As Date) As String
+    Dim h As Integer
+    h = Hour(t) Mod 12
+    If h = 0 Then h = 12
+    ClockText = h & ":" & Format$(Minute(t), "00") & IIf(Hour(t) < 12, " AM", " PM")
+End Function
 
 Private Sub picStatus_Resize()
     StatusDraw picStatus
