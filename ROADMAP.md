@@ -25,3 +25,5 @@ Nothing new is planned. What comes next, if anything, is from the list below.
 - Sketches on side faces, not just facing up.
 - A real undo and redo history.
 - Fillets and chamfers on top edges.
+- A Delphi Edition: the same program in Object Pascal (Free Pascal and Lazarus),
+  for Windows, Linux and the Raspberry Pi.
