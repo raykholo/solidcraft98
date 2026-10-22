@@ -41,6 +41,9 @@ Dim Shared RemoteAnswerDue As Boolean
 Dim Shared RemoteAnswer As String   ' what to say once settled, if not "ok"
 Dim Shared RemoteOffer As String    ' the step "yes" takes: offered by "how" or an error
 Dim Shared TutorOffer As String     ' or, failing that, by the tutor line
+Dim Shared FocusField As String     ' the field with the focus, and
+Dim Shared FocusAll As Boolean      ' whether it's all selected
+Dim Shared FocusText As String      ' and what's in it
 Dim Shared RemoteSettle As Double
 Dim Shared RemoteWaitUntil As Double
 
@@ -228,6 +231,7 @@ Function DescribeDialog(ByVal d As TDlg Ptr, ByVal isTop As Boolean) As String
                 If Len(lb) = 0 Then lb = "field " & fieldNo
                 Dim As String sel = ""
                 If i = d->focus And .kind = CT_EDIT And Abs(.caret - .selStart) = Len(.text) And Len(.text) > 0 Then sel = ", all selected: typing replaces it"
+                If isTop And i = d->focus Then FocusField = NormLabel(lb): FocusText = .text: FocusAll = Len(sel) > 0 Or Len(.text) = 0
                 r &= "  field """ & NormLabel(lb) & """: [" & .text & "]" & IIf(.kind = CT_COMBO, " (a drop-down)", "") & foc & sel & Chr(10)
                 AddTarget lb, cx, cy
                 AddTarget "field " & fieldNo, cx, cy
@@ -329,8 +333,14 @@ Function TutorLine() As String
             If d->c(i).kind = CT_CUSTOM Or d->c(i).kind = CT_LIST Then hasCustom = True
         Next
         If hasEdit Then
-            t = "This dialog wants numbers. The field with the focus is all selected, so typing replaces it. " & _
-                "key tab goes to the next field, key enter is OK, key esc is Cancel. Numbers only, no units."
+            t = "This dialog wants numbers. "
+            If Len(FocusField) = 0 Or FocusAll Then
+                t &= "The field with the focus is all selected, so typing replaces it. "
+            Else
+                t &= """" & FocusField & """ says " & FocusText & " and isn't selected, so more typing adds to the end. " & _
+                    "If " & FocusText & " is right, key tab goes on; to retype it, key shift+tab tab first (away and back selects it all). "
+            End If
+            t &= "key tab goes to the next field, key enter is OK, key esc is Cancel. Numbers only, no units."
         ElseIf hasCustom Or d->readOutFn <> 0 Then
             t = "This window is on top. Close it ([x], OK or Close) to get back to the part."
         Else
@@ -368,6 +378,7 @@ Function DescribeScreen() As String
     Dim As String r
     Dim As Long i, x, y, w, h
     TgN = 0
+    FocusField = ""
     r = APP_NAME & ", " & ScrW & " x " & ScrH & ". Turbo " & IIf(Turbo, "ON (the LED says 33 MHz)", "off (the LED says 66 MHz)") & "." & Chr(10)
     ' dialogs first: the top one is all that takes input
     If DlgTop >= 0 Then

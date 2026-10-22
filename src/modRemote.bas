@@ -131,6 +131,9 @@ Private mAnswer As String                ' what to say once settled, if not "ok"
 Private mOffer As String                 ' the step "yes" takes: offered by "how" or an error
 Private mTutorOffer As String            ' or, failing that, by the tutor line
 Private mTopKind As String               ' what's on top: "params", "msgbox", "window" or ""
+Private mFocusField As String            ' the field with the focus, and
+Private mFocusAll As Boolean             ' whether it's all selected
+Private mFocusText As String             ' and what's in it
 Private mSettleAt As Double
 Private mWaitUntil As Double
 
@@ -624,6 +627,9 @@ Private Function DescribeForm(f As Form, ByVal bTop As Boolean, Optional ByVal s
             If ctl.hWnd = GetFocus() Then
                 foc = " (has the focus"
                 If ctl.SelLength = Len(ctl.Text) And Len(ctl.Text) > 0 Then foc = foc & ", all selected: typing replaces it"
+                mFocusField = lb
+                mFocusText = ctl.Text
+                mFocusAll = (ctl.SelLength = Len(ctl.Text) And Len(ctl.Text) > 0) Or Len(ctl.Text) = 0
                 foc = foc & ")"
             End If
             txt(n) = "  field """ & lb & """: [" & ctl.Text & "]" & foc
@@ -853,6 +859,7 @@ Public Function DescribeScreen() As String
     fg = GetForegroundWindow()
     first = True
     mTopKind = ""
+    mFocusField = ""
     h = GetWindow(GetDesktopWindow(), GW_CHILD)
     Do While h <> 0
         If IsWindowVisible(h) Then
@@ -888,8 +895,14 @@ Private Function TutorLine() As String
     Dim t As String, act As Form, f As Form, n As Long, sStep As String
     Select Case mTopKind
     Case "params"
-        t = "This dialog wants numbers. The field with the focus is all selected, so typing replaces it. " & _
-            "key tab goes to the next field, key enter is OK, key esc is Cancel. Numbers only, no units."
+        t = "This dialog wants numbers. "
+        If Len(mFocusField) = 0 Or mFocusAll Then
+            t = t & "The field with the focus is all selected, so typing replaces it. "
+        Else
+            t = t & """" & mFocusField & """ says " & mFocusText & " and isn't selected, so more typing adds to the end. " & _
+                "If " & mFocusText & " is right, key tab goes on; to retype it, key shift+tab tab first (away and back selects it all). "
+        End If
+        t = t & "key tab goes to the next field, key enter is OK, key esc is Cancel. Numbers only, no units."
     Case "msgbox"
         t = "A message box. Read it, then click one of its buttons."
     Case "window"
