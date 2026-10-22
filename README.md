@@ -54,6 +54,17 @@ Or on a floppy, as was intended: each release also has a 1.44 MB disk image
 530 KB, so it all fits on one disk. Write it to a disk (or attach it to a
 virtual machine) and run `A:\SC98.EXE`.
 
+## Other editions
+
+The same program, the same features and the same `.sc98` files, byte for
+byte, in two more languages from the period (or near enough). Both are on the
+[Releases page](../../releases) next to the Windows version.
+
+| Edition | Runs on | Written in | Download |
+|---|---|---|---|
+| [Delphi Edition](delphi/) | Windows, ReactOS, Linux, Raspberry Pi | Object Pascal (Free Pascal and Lazarus) | `SolidCraft98-Delphi-1.1.1.zip` |
+| [Linux and Raspberry Pi](freebasic/) | Linux, and a Raspberry Pi from 2014 (ARMv6) | FreeBASIC, every pixel drawn by hand | `SolidCraft98-Linux-1.1.1.tar.gz` |
+
 ## What it can't do yet
 
 - Sketches are rectangles and circles, flat, facing up. Revolve turns them

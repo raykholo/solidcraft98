@@ -1,0 +1,12 @@
+wait 200
+click 336 37
+wait 100
+key r
+wait 100
+type 40/0
+key enter
+wait 200
+shot tests/out/x01_fatal.bmp
+key space
+wait 100
+shot tests/out/x02_after.bmp

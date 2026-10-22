@@ -1,0 +1,11 @@
+# x86-64 build and test image: FreeBASIC 1.10.1 on Ubuntu 22.04, plus a
+# virtual X screen and xdotool for the screen tests.
+FROM docker.io/library/ubuntu:22.04
+ENV DEBIAN_FRONTEND=noninteractive
+RUN apt-get update -qq && apt-get install -y -qq build-essential curl ca-certificates \
+      libncurses-dev libx11-dev libxext-dev libxrender-dev libxrandr-dev libxpm-dev libffi-dev \
+      xz-utils imagemagick xvfb xdotool x11-apps >/dev/null && rm -rf /var/lib/apt/lists/*
+RUN cd /tmp && curl -sSLo fb.tar.xz https://downloads.sourceforge.net/project/fbc/FreeBASIC-1.10.1/Binaries-Linux/FreeBASIC-1.10.1-ubuntu-22.04-x86_64.tar.xz \
+ && echo "aa966861f97d9be8b8619e4b3f0a453094b6133c3967a42ee0009fec601dd2e1  fb.tar.xz" | sha256sum -c - \
+ && tar xf fb.tar.xz && cd FreeBASIC-1.10.1-ubuntu-22.04-x86_64 && ./install.sh -i >/dev/null \
+ && cd / && rm -rf /tmp/* && fbc -version | head -1

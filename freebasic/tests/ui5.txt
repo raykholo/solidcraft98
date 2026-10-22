@@ -1,0 +1,30 @@
+wait 200
+key ctrl+o
+wait 100
+type Plate with holes.solidcraft
+key enter
+wait 300
+shot tests/out/z01_notice.bmp
+key enter
+wait 300
+shot tests/out/z02_plate.bmp
+key ctrl+o
+wait 100
+type Revolved parts.solidcraft
+key enter
+wait 300
+shot tests/out/z03_rev.bmp
+key enter
+wait 300
+shot tests/out/z03b_rev.bmp
+key ctrl+o
+wait 100
+type Flange.solidcraft
+key enter
+wait 300
+shot tests/out/z04_flange.bmp
+key enter
+wait 300
+key s
+wait 2000
+shot tests/out/z05_flange_shaded.bmp

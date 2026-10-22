@@ -1,0 +1,19 @@
+# Startup, a box with a hole, shaded.
+sleep 3
+shot 01-start
+key r
+shot 02-rect-dialog
+key Return
+sleep 1
+shot 03-rect
+key e
+key Return
+sleep 1
+shot 04-extrude
+key h
+key Return
+sleep 1
+shot 05-hole
+key s
+sleep 3
+shot 06-shaded

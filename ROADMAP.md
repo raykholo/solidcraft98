@@ -6,6 +6,9 @@ What's been done, and what might happen. Nothing below "Done" is a promise.
 
 - **1.1:** Export for Rapid Prototyping (`.stl`), so parts can be 3D-printed;
   and a shaded view, slow on purpose (slower still with Turbo on).
+- **Editions:** the [Delphi Edition](delphi/) in Object Pascal, for Windows,
+  Linux and the Raspberry Pi; and a [FreeBASIC version](freebasic/) for Linux
+  and the original Raspberry Pi.
 
 ## Planned
 
@@ -25,5 +28,3 @@ Nothing new is planned. What comes next, if anything, is from the list below.
 - Sketches on side faces, not just facing up.
 - A real undo and redo history.
 - Fillets and chamfers on top edges.
-- A Delphi Edition: the same program in Object Pascal (Free Pascal and Lazarus),
-  for Windows, Linux and the Raspberry Pi.

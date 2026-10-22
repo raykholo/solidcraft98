@@ -1,0 +1,57 @@
+wait 200
+key r
+wait 100
+key enter
+wait 200
+shot tests/out/e01_cal.bmp
+click 600 482
+wait 100
+shot tests/out/e02_calhelp.bmp
+click 600 504
+key e
+wait 100
+key enter
+wait 200
+click 336 37
+wait 300
+click 15 9
+wait 100
+click 80 102
+wait 300
+shot tests/out/e03_floppy.bmp
+wait 3000
+shot tests/out/e04_insert.bmp
+key esc
+wait 200
+key enter
+wait 100
+click 252 9
+wait 100
+click 280 61
+wait 200
+type WIN98
+wait 1500
+shot tests/out/e05_credits.bmp
+key space
+wait 200
+click 270 230 shift
+wait 1500
+shot tests/out/e06_setup.bmp
+wait 9000
+shot tests/out/e07_setupdone.bmp
+key enter
+wait 100
+key enter
+wait 100
+key enter
+wait 100
+click 15 9
+wait 100
+click 80 119
+wait 200
+key ctrl+a
+type plate.htm
+key enter
+wait 500
+shot tests/out/e08_published.bmp
+key enter

@@ -1,0 +1,10 @@
+wait 200
+click 15 9
+wait 100
+click 80 136
+wait 200
+key ctrl+a
+type flange.stl
+key enter
+wait 300
+key enter

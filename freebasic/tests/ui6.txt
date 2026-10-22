@@ -1,0 +1,12 @@
+wait 300
+shot tests/out/z04_flange.bmp
+key enter
+wait 300
+key s
+wait 2000
+shot tests/out/z05_flange_shaded.bmp
+key ctrl+s
+wait 100
+type flange-import
+key enter
+wait 200

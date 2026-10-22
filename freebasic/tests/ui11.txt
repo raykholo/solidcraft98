@@ -1,0 +1,16 @@
+wait 200
+key ctrl+n
+wait 100
+click 212 9
+wait 100
+click 240 61
+wait 300
+shot tests/out/m01_tile2.bmp
+click 744 63
+wait 200
+shot tests/out/m02_min.bmp
+click 212 9
+wait 100
+click 240 27
+wait 300
+shot tests/out/m03_cascade.bmp

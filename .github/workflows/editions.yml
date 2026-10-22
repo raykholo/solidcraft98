@@ -1,0 +1,206 @@
+name: Editions
+
+# Builds the Delphi Edition (Windows, Linux, Raspberry Pi) and the FreeBASIC
+# version (Linux, Raspberry Pi), runs each on a virtual screen, and packs the
+# release downloads. The Pi builds run in an emulated ARMv6 Raspberry Pi OS.
+# Run it by hand with a release tag (such as v1.1.1) to attach the downloads
+# to that release.
+
+on:
+  push:
+    branches: ["**"]
+    paths: ["delphi/**", "freebasic/**", "samples/**", "LICENSE", "NOTICE", ".github/workflows/editions.yml"]
+  pull_request:
+    paths: ["delphi/**", "freebasic/**", "samples/**", "LICENSE", "NOTICE", ".github/workflows/editions.yml"]
+  workflow_dispatch:
+    inputs:
+      release:
+        description: "Attach the downloads to this release tag (blank: don't)"
+        required: false
+        default: ""
+
+env:
+  FB_URL: https://downloads.sourceforge.net/project/fbc/FreeBASIC-1.10.1/Binaries-Linux/FreeBASIC-1.10.1-ubuntu-22.04-x86_64.tar.xz
+  FB_SHA256: aa966861f97d9be8b8619e4b3f0a453094b6133c3967a42ee0009fec601dd2e1
+  LAZARUS_WIN32_URL: https://downloads.sourceforge.net/project/lazarus/Lazarus%20Windows%2032%20bits/Lazarus%203.6/lazarus-3.6-fpc-3.2.2-win32.exe
+  LAZARUS_WIN32_SHA256: 72d3e02dc2d87d3a637ddc1640e1d4fc1ef6c1a7b5a4ce182161e881f8952c46
+  PI_IMAGE: docker.io/balenalib/raspberry-pi-debian:bullseye
+
+jobs:
+  delphi-linux:
+    runs-on: ubuntu-22.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v7
+      - name: Get Lazarus
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq lazarus-ide-gtk2 lcl-gtk2 lcl-utils fpc xvfb xdotool imagemagick > /dev/null
+      - name: Build
+        working-directory: delphi
+        run: lazbuild -q SolidCraft98.lpi && ls -la build/SolidCraft98
+      - name: Run it on a virtual screen
+        working-directory: delphi
+        run: bash tests/x11.sh tests/ui-basic.sh | tee run.txt; grep -q "app alive" run.txt
+      - uses: actions/upload-artifact@v7
+        with: { name: delphi-linux, path: delphi/build/SolidCraft98 }
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with: { name: delphi-linux-screens, path: delphi/tests/out }
+
+  delphi-windows:
+    runs-on: windows-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v7
+      - name: Get Lazarus (32-bit, so it runs on ReactOS too)
+        shell: pwsh
+        run: |
+          $ProgressPreference = "SilentlyContinue"
+          Invoke-WebRequest $env:LAZARUS_WIN32_URL -OutFile laz32.exe -UserAgent "curl/8"
+          if ((Get-FileHash laz32.exe -Algorithm SHA256).Hash -ne $env:LAZARUS_WIN32_SHA256) { throw "Lazarus installer checksum doesn't match" }
+          Start-Process -Wait laz32.exe -ArgumentList "/VERYSILENT","/SUPPRESSMSGBOXES","/NORESTART","/SP-","/DIR=C:\lazarus"
+          Remove-Item laz32.exe
+      - name: Build
+        working-directory: delphi
+        shell: pwsh
+        run: |
+          C:\lazarus\lazbuild.exe -q SolidCraft98.lpi
+          if (-not (Test-Path build\SolidCraft98.exe)) { throw "no EXE" }
+          Get-Item build\SolidCraft98.exe
+      - name: Start it
+        working-directory: delphi
+        shell: pwsh
+        run: |
+          $p = Start-Process build\SolidCraft98.exe -PassThru
+          Start-Sleep 10
+          if ($p.HasExited) { throw "SolidCraft98.exe exited with $($p.ExitCode)" }
+          Add-Type -AssemblyName System.Windows.Forms, System.Drawing
+          $b = [System.Windows.Forms.Screen]::PrimaryScreen.Bounds
+          $bmp = New-Object System.Drawing.Bitmap $b.Width, $b.Height
+          [System.Drawing.Graphics]::FromImage($bmp).CopyFromScreen($b.Location, [System.Drawing.Point]::Empty, $b.Size)
+          $bmp.Save("windows-start.png")
+          Stop-Process $p
+      - uses: actions/upload-artifact@v7
+        with: { name: delphi-windows, path: delphi/build/SolidCraft98.exe }
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with: { name: delphi-windows-screens, path: delphi/windows-start.png }
+
+  delphi-pi:
+    runs-on: ubuntu-22.04
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@v7
+      - name: Emulate ARM
+        run: docker run --privileged --rm docker.io/tonistiigi/binfmt --install arm
+      - name: Build in Raspberry Pi OS (ARMv6)
+        working-directory: delphi
+        run: |
+          docker run --rm --platform linux/arm/v6 -v "$PWD":/w -w /w $PI_IMAGE bash -c '
+            set -e
+            export DEBIAN_FRONTEND=noninteractive
+            apt-get update -qq
+            apt-get install -y -qq --no-install-recommends lazarus-ide-gtk2 lcl-gtk2 lcl-utils fpc lazarus-src-2.0 lcl-utils-2.0 lcl-units-2.0 file > /dev/null
+            lazbuild -q SolidCraft98.lpi
+            file build/SolidCraft98
+            readelf -A build/SolidCraft98 | grep "Tag_CPU_arch: v6"'
+      - uses: actions/upload-artifact@v7
+        with: { name: delphi-pi, path: delphi/build/SolidCraft98 }
+
+  freebasic-linux:
+    runs-on: ubuntu-22.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v7
+      - name: Get FreeBASIC
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq libncurses-dev libx11-dev libxext-dev libxrender-dev libxrandr-dev libxpm-dev libffi-dev imagemagick > /dev/null
+          curl -sSLo fb.tar.xz "$FB_URL"
+          echo "$FB_SHA256  fb.tar.xz" | sha256sum -c -
+          tar xf fb.tar.xz && (cd FreeBASIC-1.10.1-ubuntu-22.04-x86_64 && sudo ./install.sh -i > /dev/null)
+          rm -rf fb.tar.xz FreeBASIC-1.10.1-ubuntu-22.04-x86_64
+      - name: Build
+        working-directory: freebasic
+        run: |
+          mkdir -p build/arm
+          fbc -w all -exx src/sc98.bas -x build/sc98 2>&1 | grep -v "warning 38" || true
+          strip build/sc98 && ls -la build/sc98
+          # the Pi build starts here: fbc writes the C for ARMv6
+          fbc -target linux-arm -arch armv6 -gen gcc -r -m sc98 src/sc98.bas -o build/arm/sc98.c 2>&1 | grep -v "warning 38" || true
+          ls -la build/arm/sc98.c
+      - name: Run a UI script headless
+        working-directory: freebasic
+        run: |
+          mkdir -p tests/home/Documents tests/out
+          cp tests/*.solidcraft tests/home/Documents/
+          HOME=$PWD/tests/home timeout 120 ./build/sc98 --headless --log tests/out/log.txt --script tests/ui1.txt
+          for f in tests/out/*.bmp; do convert "$f" "${f%.bmp}.png" && rm "$f"; done
+          ls tests/out
+      - uses: actions/upload-artifact@v7
+        with: { name: freebasic-linux, path: freebasic/build/sc98 }
+      - uses: actions/upload-artifact@v7
+        with: { name: freebasic-pi-c, path: freebasic/build/arm/sc98.c }
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with: { name: freebasic-linux-screens, path: freebasic/tests/out }
+
+  freebasic-pi:
+    needs: freebasic-linux
+    runs-on: ubuntu-22.04
+    timeout-minutes: 120
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/download-artifact@v8
+        with: { name: freebasic-pi-c, path: freebasic/build/arm }
+      - name: Emulate ARM
+        run: docker run --privileged --rm docker.io/tonistiigi/binfmt --install arm
+      - name: FreeBASIC's runtime for ARMv6, from the cache
+        id: rtlib
+        uses: actions/cache@v4
+        with:
+          path: freebasic/rtlib-armv6
+          key: fb-rtlib-armv6-1.10.1-${{ hashFiles('freebasic/tools/arm-rtlib.sh') }}
+      - name: Compile and link in Raspberry Pi OS (ARMv6)
+        working-directory: freebasic
+        run: |
+          docker run --rm --platform linux/arm/v6 -v "$PWD":/w -w /w -e BUILD_RT=${{ steps.rtlib.outputs.cache-hit != 'true' }} $PI_IMAGE bash -c '
+            set -e
+            export DEBIAN_FRONTEND=noninteractive
+            apt-get update -qq
+            apt-get install -y -qq build-essential curl ca-certificates libncurses-dev libx11-dev libxext-dev libxrender-dev libxrandr-dev libxpm-dev libffi-dev libgpm-dev xz-utils > /dev/null
+            if [ "$BUILD_RT" = true ]; then bash tools/arm-rtlib.sh /w/rtlib-armv6; fi
+            bash tools/arm-link.sh build/arm/sc98.c build/arm/sc98 /w/rtlib-armv6'
+      - uses: actions/upload-artifact@v7
+        with: { name: freebasic-pi, path: freebasic/build/arm/sc98 }
+
+  package:
+    needs: [delphi-linux, delphi-windows, delphi-pi, freebasic-linux, freebasic-pi]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/download-artifact@v8
+        with: { path: art }
+      - name: Pack
+        run: |
+          mkdir -p delphi/build/arm delphi/build/win freebasic/build/arm dist-out
+          cp art/delphi-linux/SolidCraft98 delphi/build/SolidCraft98
+          cp art/delphi-pi/SolidCraft98 delphi/build/arm/SolidCraft98
+          cp art/delphi-windows/SolidCraft98.exe delphi/build/win/SolidCraft98.exe
+          cp art/freebasic-linux/sc98 freebasic/build/sc98
+          cp art/freebasic-pi/sc98 freebasic/build/arm/sc98
+          chmod +x delphi/build/SolidCraft98 delphi/build/arm/SolidCraft98 freebasic/build/sc98 freebasic/build/arm/sc98
+          delphi/mkdist.sh
+          freebasic/mkdist.sh --pack-only
+          cp delphi/dist/*.zip freebasic/dist/*.tar.gz dist-out/
+          cd dist-out && sha256sum * | tee SHA256SUMS-editions.txt
+      - uses: actions/upload-artifact@v7
+        with: { name: editions, path: dist-out/ }
+      - name: Attach to the release
+        if: github.event_name == 'workflow_dispatch' && inputs.release != ''
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh release upload "${{ inputs.release }}" dist-out/* --clobber --repo "$GITHUB_REPOSITORY"

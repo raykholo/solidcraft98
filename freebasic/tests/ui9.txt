@@ -1,0 +1,11 @@
+wait 200
+key r
+wait 100
+key enter
+wait 200
+click 336 37
+wait 200
+click 600 504
+shot tests/out/k01_before.bmp
+wait 63000
+shot tests/out/k02_y2k.bmp

@@ -1,0 +1,46 @@
+# About, WIN98, DELPHI, and DLL Hell (Turbo, Shift-click the logo).
+sleep 3
+key alt+v
+key t
+key alt+h
+key a
+sleep 1
+shot a01-about
+type_ WIN98
+sleep 3
+shot a02-credits
+key space
+sleep 1
+type_ DELPHI
+sleep 1
+shot a03-palette
+drag 340 330 420 400 470 450
+shot a04-palette-dragged
+key Return
+sleep 1
+xdotool mousemove 350 300 keydown shift click 1 keyup shift
+sleep 3
+shot a05-setup
+sleep 8
+shot a06-setup-done
+key Return
+sleep 1
+shot a07-kidding
+key Return
+key Return
+sleep 1
+key c
+key Return
+key ctrl+n
+key alt+w
+key c
+sleep 1
+shot a08-cascade
+key alt+w
+key v
+sleep 1
+shot a09-tilev
+key alt+w
+key h
+sleep 1
+shot a10-tileh

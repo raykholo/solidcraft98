@@ -1,0 +1,5 @@
+*.bas text eol=lf
+*.bi text eol=lf
+*.sh text eol=lf
+*.sc98 binary
+*.solidcraft binary

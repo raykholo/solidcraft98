@@ -1,0 +1,9 @@
+# ARMv6 (Raspberry Pi 1) image: Raspberry Pi OS bullseye with Free Pascal
+# and Lazarus 2.0, plus a virtual X screen for the screen tests.
+# Build it with --platform linux/arm/v6 (needs qemu-user-static on a PC).
+FROM docker.io/balenalib/raspberry-pi-debian:bullseye
+ENV DEBIAN_FRONTEND=noninteractive
+RUN apt-get update -qq && apt-get install -y -qq --no-install-recommends \
+      lazarus-ide-gtk2 lcl-gtk2 lcl-utils fpc lazarus-src-2.0 lcl-utils-2.0 lcl-units-2.0 file \
+      xvfb xdotool imagemagick fonts-dejavu-core >/dev/null && rm -rf /var/lib/apt/lists/* \
+ && fpc -iV && lazbuild --version

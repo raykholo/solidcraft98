@@ -1,0 +1,7 @@
+*.pas text eol=lf
+*.lpr text eol=lf
+*.inc text eol=lf
+*.sh text eol=lf
+*.sc98 binary
+*.solidcraft binary
+*.ico binary

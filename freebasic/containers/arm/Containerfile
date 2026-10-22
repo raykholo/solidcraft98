@@ -1,0 +1,12 @@
+# ARMv6 (Raspberry Pi 1) image: a Raspberry Pi OS bullseye userland with
+# FreeBASIC's runtime built from source for ARMv6, in
+# /usr/local/lib/freebasic/linux-arm. Build it from the freebasic folder:
+#   podman build --platform linux/arm/v6 -t sc98-fb-arm -f containers/arm/Containerfile .
+# (on a PC that needs qemu-user-static).
+FROM docker.io/balenalib/raspberry-pi-debian:bullseye
+ENV DEBIAN_FRONTEND=noninteractive
+RUN apt-get update -qq && apt-get install -y -qq build-essential curl ca-certificates \
+      libncurses-dev libx11-dev libxext-dev libxrender-dev libxrandr-dev libxpm-dev libffi-dev \
+      libgpm-dev xz-utils imagemagick >/dev/null && rm -rf /var/lib/apt/lists/*
+COPY tools/arm-rtlib.sh /tmp/
+RUN bash /tmp/arm-rtlib.sh /usr/local/lib/freebasic/linux-arm && rm /tmp/arm-rtlib.sh

@@ -1,0 +1,64 @@
+# files: save as, export STL, about, help, open, turbo type mismatch, fatal
+wait 200
+key r
+wait 100
+key enter
+wait 200
+key e
+wait 100
+key enter
+wait 200
+key ctrl+s
+wait 200
+shot tests/out/v01_saveas.bmp
+key ctrl+a
+type Block
+key enter
+wait 200
+shot tests/out/v02_saved.bmp
+click 15 9
+wait 100
+click 80 136
+wait 300
+shot tests/out/v03_stl_dialog.bmp
+key enter
+wait 300
+shot tests/out/v04_stl_done.bmp
+key enter
+wait 100
+click 252 9
+wait 100
+click 280 61
+wait 200
+shot tests/out/v05_about.bmp
+key enter
+key f1
+wait 100
+shot tests/out/v06_help.bmp
+key enter
+key ctrl+o
+wait 200
+shot tests/out/v07_open.bmp
+type Block.sc98
+key enter
+wait 300
+shot tests/out/v08_opened.bmp
+click 495 37
+wait 300
+key r
+wait 100
+type 20mm
+key enter
+wait 100
+shot tests/out/v09_mismatch.bmp
+key enter
+key ctrl+a
+type 40/0
+key enter
+wait 200
+shot tests/out/v10_fatal.bmp
+key space
+wait 100
+key esc
+wait 100
+shot tests/out/v11_back.bmp

@@ -1,0 +1,36 @@
+# first look: start, the File menu, sketch, extrude, a hole
+wait 200
+shot tests/out/u01_start.bmp
+click 15 9
+wait 100
+shot tests/out/u02_filemenu.bmp
+key esc
+key r
+wait 100
+shot tests/out/u03_rect.bmp
+type 80
+key tab
+type 50
+key tab
+type -40
+key tab
+type -25
+key tab
+type 6
+key enter
+wait 200
+shot tests/out/u04_sketch.bmp
+key e
+wait 100
+type 10
+key enter
+wait 200
+key h
+wait 100
+shot tests/out/u05_hole.bmp
+key enter
+wait 300
+shot tests/out/u06_holed.bmp
+key s
+wait 2000
+shot tests/out/u07_shaded.bmp

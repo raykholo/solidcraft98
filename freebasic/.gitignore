@@ -1,0 +1,9 @@
+build/
+*.o
+*.png
+!docs/**/*.png
+sc98
+sc98.exe
+tests/out/
+dist/
+tests/home/

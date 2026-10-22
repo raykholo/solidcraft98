@@ -1,0 +1,7 @@
+# x86-64 build and test image: Free Pascal 3.2.2 and Lazarus 2.2 (GTK 2) on
+# Ubuntu 22.04, plus a virtual X screen and xdotool for the screen tests.
+FROM docker.io/library/ubuntu:22.04
+ENV DEBIAN_FRONTEND=noninteractive
+RUN apt-get update -qq && apt-get install -y -qq lazarus-ide-gtk2 lcl-gtk2 lcl-utils fpc \
+      xvfb xdotool x11-apps imagemagick python3 >/dev/null && rm -rf /var/lib/apt/lists/* \
+ && fpc -iV && lazbuild --version

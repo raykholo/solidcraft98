@@ -1,0 +1,32 @@
+wait 200
+key ctrl+n
+wait 100
+key ctrl+n
+wait 100
+click 212 9
+wait 100
+click 240 61
+wait 300
+shot tests/out/w01_tilev.bmp
+click 212 9
+wait 100
+click 240 27
+wait 300
+shot tests/out/w02_cascade.bmp
+click 212 9
+wait 100
+shot tests/out/w03_winmenu.bmp
+key esc
+key up
+key up
+key down
+key down
+key left
+key right
+key left
+key right
+key b
+key a
+wait 500
+shot tests/out/w04_konami.bmp
+wait 3000
