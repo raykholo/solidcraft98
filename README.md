@@ -11,7 +11,7 @@
 > Prototyping and a Turbo button. Runs in 16 MB of RAM***. Fits on one
 > floppy disk****.
 >
-> <sub>\* about 12 frames a second. \*\* flat. \*\*\* untested.
+> <sub>\* about 12 frames a second. \*\* flat. \*\*\* tested: 9.4 MB, see [Where it runs](#where-it-runs).
 > \*\*\*\* packed with UPX, which came out in 1998, so it counts.</sub>
 
 ![SolidCraft 98 on Windows 11, showing the Mounting Plate sample, shaded](docs/screenshots/windows11-mounting-plate.png)
@@ -337,6 +337,11 @@ NT-compatible operating system. On ReactOS, with the Classic theme at
 800x600, it looks the way it was always meant to: grey 3D chrome and blue
 gradient title bars. The same `.sc98` files open on both. On a screen too
 small for the window it starts maximised.
+
+SolidCraft98.exe uses about 9.4 MB of RAM, with a part open and shaded.
+The 1 GB in its About box is the PC's memory, reported the 1998 way.
+
+![Task Manager on ReactOS: SolidCraft98.exe at 9,424 K](docs/screenshots/reactos-memory.png)
 
 ## Tools
 
