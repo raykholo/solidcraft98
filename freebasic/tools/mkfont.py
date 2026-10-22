@@ -11,13 +11,18 @@ for line in open(sys.argv[1], encoding="utf-8"):
     line = line.rstrip("\n")
     if line.startswith("@"):
         tok, w, top = line[1:].split(" ")
-        code = SPECIAL.get(tok, ord(tok) if len(tok) == 1 else None)
+        if tok.startswith("0x"):
+            code = int(tok, 16)        # a Windows-1252 code, e.g. 0xD7 for the times sign
+        else:
+            code = SPECIAL.get(tok, ord(tok) if len(tok) == 1 else None)
         if code is None:
             sys.exit(f"bad glyph name {tok!r}")
         cur = glyphs[code] = {"w": int(w), "top": int(top), "rows": []}
     elif cur is not None and line and line[0] in "#.":
         if len(line) != cur["w"]:
             sys.exit(f"glyph {chr(code)!r}: row {line!r} is not {cur['w']} wide")
+        if len(line) > 8:
+            sys.exit(f"glyph {chr(code)!r}: wider than the 8 bits a row has")
         cur["rows"].append(line)
 
 missing = [chr(c) for c in range(33, 127) if c not in glyphs]

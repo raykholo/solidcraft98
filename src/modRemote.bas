@@ -8,8 +8,8 @@ Attribute VB_Name = "modRemote"
 '   look                      what's on the screen
 '   click <name>              a button, menu, field, feature or toolbar
 '   click <x> <y>             button, by the name the read-out gives it
-'   dblclick <name>|<x> <y>   (a feature in the timeline: edit it)
-'   rclick <name>|<x> <y>
+'   doubleclick <name>|<x> <y>   (a feature in the timeline: edit it)
+'   rightclick <name>|<x> <y>
 '   drag <x1> <y1> <x2> <y2> [right]
 '   menu <title> > <item>     e.g. "menu File > Save As..."
 '   key <keys>                e.g. "key e", "key ctrl+s", "key enter"
@@ -932,7 +932,7 @@ Private Function TutorLine() As String
                         t = FeatureName(Docs(act.DocIndex), n) & " is a flat sketch. menu Features > Extrude... makes it solid."
                         sStep = "menu Features > Extrude..."
                     Case Else
-                        t = "To change a feature, dblclick it in the timeline."
+                        t = "To change a feature, doubleclick it in the timeline."
                     End Select
                 End If
                 For Each f In Forms
@@ -960,7 +960,7 @@ End Function
 ' ---- the commands ----
 
 Private Function HelpText() As String
-    HelpText = "Commands: look | click <name> or <x> <y> | dblclick <name> or <x> <y> | rclick <name> or <x> <y>" & vbCrLf & _
+    HelpText = "Commands: look | click <name> or <x> <y> | doubleclick <name> or <x> <y> | rightclick <name> or <x> <y>" & vbCrLf & _
         "drag <x1> <y1> <x2> <y2> [right] | menu <title> (opens it) or menu <title> > <item> | key <keys> (e, ctrl+s, enter, esc, tab, f5)" & vbCrLf & _
         "type <text> | wait <ms> | how <words> (looks up how to do something) | yes (takes the step offered) | help | quit"
 End Function
@@ -1018,6 +1018,11 @@ Private Sub RemoteDo(ByVal l As String)
     Dim cmd As String, rest As String, p As Long, x As Long, y As Long
     p = InStr(l, " ")
     If p Then cmd = LCase$(Left$(l, p - 1)): rest = Trim$(Mid$(l, p + 1)) Else cmd = LCase$(l)
+    ' the short and hyphenated spellings people use
+    Select Case cmd
+    Case "dblclick", "double-click", "double_click": cmd = "doubleclick"
+    Case "rclick", "right-click", "right_click": cmd = "rightclick"
+    End Select
     If cmd <> "look" And cmd <> "help" And cmd <> "how" And cmd <> "yes" And cmd <> "" Then mOffer = ""
     Select Case cmd
     Case ""
@@ -1045,7 +1050,7 @@ Private Sub RemoteDo(ByVal l As String)
         If Len(sDo) = 0 Then Say "error: nothing has been offered, so there's nothing to say yes to.": Exit Sub
         RemoteDo sDo
         Exit Sub
-    Case "click", "dblclick", "rclick"
+    Case "click", "doubleclick", "rightclick"
         If Len(rest) = 0 Then Say "error: " & cmd & " what?": Exit Sub
         If Not XY(rest, x, y) Then
             DescribeScreen               ' fills in the targets
@@ -1065,7 +1070,7 @@ Private Sub RemoteDo(ByVal l As String)
                 Exit Sub
             End If
         End If
-        QueueClick x, y, cmd = "rclick", cmd = "dblclick"
+        QueueClick x, y, cmd = "rightclick", cmd = "doubleclick"
     Case "drag"
         Dim v() As String
         v = Split(rest, " ")
@@ -1104,8 +1109,6 @@ Private Sub RemoteDo(ByVal l As String)
         Dim sLike As String
         Select Case cmd
         Case "select", "choose", "pick", "tap", "hit", "push", "open", "activate": sLike = "click"
-        Case "doubleclick", "double-click", "double_click": sLike = "dblclick"
-        Case "rightclick", "right-click": sLike = "rclick"
         Case "write", "enter", "input", "fill", "set": sLike = "type"
         Case "press", "hotkey", "shortcut": sLike = "key"
         Case "finish", "finished", "stop", "end": sLike = ""

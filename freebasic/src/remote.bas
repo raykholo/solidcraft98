@@ -10,8 +10,8 @@
 '   look                      the screen, as text
 '   click <name>              click what's on screen by its name: a button,
 '   click <x> <y>             a menu, a field, a feature, a toolbar button
-'   dblclick <name>|<x> <y>   (a feature: double-click edits it)
-'   rclick <name>|<x> <y>
+'   doubleclick <name>|<x> <y>   (a feature: double-click edits it)
+'   rightclick <name>|<x> <y>
 '   drag <x1> <y1> <x2> <y2> [right]
 '   menu <title> > <item>     e.g. "menu File > Save As..."
 '   key <keys>                e.g. "key e", "key ctrl+s", "key enter"
@@ -362,7 +362,7 @@ Function TutorLine() As String
                 t = FeatureName(*dd, n) & " is a flat sketch. menu Features > Extrude... makes it solid."
                 sStep = "menu Features > Extrude..."
             Else
-                t = "To change a feature, dblclick it in the timeline."
+                t = "To change a feature, doubleclick it in the timeline."
             End If
             If CalVisible Then t &= " Cal is only a helper: any of Cal's buttons sends Cal away."
         End If
@@ -449,12 +449,12 @@ End Function
 ' ---- running commands ----
 
 Function RemoteHelp() As String
-    Return "Commands: look | click <name> or <x> <y> | dblclick <name> or <x> <y> | rclick <name> or <x> <y>" & Chr(10) & _
+    Return "Commands: look | click <name> or <x> <y> | doubleclick <name> or <x> <y> | rightclick <name> or <x> <y>" & Chr(10) & _
         "drag <x1> <y1> <x2> <y2> [right] | menu <title> (opens it) or menu <title> > <item> | key <keys> (e, ctrl+s, enter, esc, tab, f5)" & Chr(10) & _
         "type <text> | wait <ms> | shot <file.bmp> | how <words> (looks up how to do something) | yes (takes the step offered) | help | quit"
 End Function
 
-' click/dblclick/rclick take a name, or x and y.
+' click/doubleclick/rightclick take a name, or x and y.
 Function TargetXY(ByRef arg As String, ByRef x As Long, ByRef y As Long, ByRef errMsg As String) As Boolean
     Dim As String a = Trim(arg)
     Dim As Long sp = InStr(a, " ")
@@ -480,6 +480,11 @@ Sub RemoteDo(ByRef l As String)
     Dim As Long x, y
     Dim As String e
     LogLine "remote: " & l
+    ' the short and hyphenated spellings people use
+    Select Case cmd
+    Case "dblclick", "double-click", "double_click": cmd = "doubleclick"
+    Case "rclick", "right-click", "right_click": cmd = "rightclick"
+    End Select
     If cmd <> "look" And cmd <> "help" And cmd <> "how" And cmd <> "yes" And cmd <> "" Then RemoteOffer = ""
     Select Case cmd
     Case ""
@@ -505,7 +510,7 @@ Sub RemoteDo(ByRef l As String)
         If Len(sDo) = 0 Then RemoteSay "error: nothing has been offered, so there's nothing to say yes to.": Exit Sub
         RemoteDo sDo
         Exit Sub
-    Case "click", "dblclick", "rclick"
+    Case "click", "doubleclick", "rightclick"
         If Len(Trim(rest)) = 0 Then RemoteSay "error: " & cmd & " what?": Exit Sub
         If Not TargetXY(rest, x, y, e) Then
             Dim As String sNear = NearestTarget(rest)
@@ -517,7 +522,7 @@ Sub RemoteDo(ByRef l As String)
             RemoteSay e
             Exit Sub
         End If
-        RemoteClick x, y, IIf(cmd = "rclick", 2, 1), cmd = "dblclick"
+        RemoteClick x, y, IIf(cmd = "rightclick", 2, 1), cmd = "doubleclick"
     Case "drag"
         Dim As Long x1 = Val(NextWord(rest)), y1 = Val(NextWord(rest)), x2 = Val(NextWord(rest)), y2 = Val(NextWord(rest)), i
         Dim As Long b = IIf(LCase(NextWord(rest)) = "right", 2, 1)
@@ -606,8 +611,6 @@ Sub RemoteDo(ByRef l As String)
         Dim As String sLike
         Select Case cmd
         Case "select", "choose", "pick", "tap", "hit", "push", "open", "activate": sLike = "click"
-        Case "doubleclick", "double-click", "double_click": sLike = "dblclick"
-        Case "rightclick", "right-click": sLike = "rclick"
         Case "write", "enter", "input", "fill", "set": sLike = "type"
         Case "press", "hotkey", "shortcut": sLike = "key"
         End Select

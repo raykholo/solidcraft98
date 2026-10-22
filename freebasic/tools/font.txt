@@ -4,7 +4,8 @@
 #
 # "@<char> <width> <first row>" starts a glyph; the rows follow ("#" ink,
 # "." paper). Rows not given are blank. Special chars: SP space, AT @,
-# HASH #, DEG degree sign, DOT middle dot.
+# HASH #, DEG degree sign, DOT middle dot; 0xNN is that Windows-1252 code
+# (the rest of the Windows character set a 1999 chat window could show).
 
 @SP 3 0
 
@@ -771,3 +772,78 @@
 .#.
 @DOT 1 5
 #
+
+@0xA0 3 0
+@0xD7 5 3
+#...#
+.#.#.
+..#..
+.#.#.
+#...#
+@0xF7 5 3
+..#..
+.....
+#####
+.....
+..#..
+@0xB9 3 1
+.#.
+##.
+.#.
+.#.
+###
+@0xB2 3 1
+##.
+..#
+.#.
+#..
+###
+@0xB3 3 1
+###
+..#
+.##
+..#
+###
+@0xB1 5 2
+..#..
+..#..
+#####
+..#..
+..#..
+.....
+#####
+@0xB5 4 3
+#..#
+#..#
+#..#
+#..#
+#..#
+####
+#...
+#...
+@0x96 5 5
+#####
+@0x97 8 5
+########
+@0x85 5 8
+#.#.#
+@0x95 3 4
+.#.
+###
+.#.
+@0x91 2 1
+.#
+#.
+#.
+@0x92 2 1
+.#
+.#
+#.
+@0x93 4 1
+.#.#
+#.#.
+#.#.
+@0x94 4 1
+.#.#
+.#.#
+#.#.
