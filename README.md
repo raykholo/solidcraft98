@@ -16,6 +16,10 @@
 
 ![SolidCraft 98 on Windows 11, showing the Mounting Plate sample, shaded](docs/screenshots/windows11-mounting-plate.png)
 
+**Watch it:** [from an empty desktop to a 3D-printable part, on ReactOS (3:43, YouTube, turn on captions)](https://youtu.be/7t6-iIu5gdg)
+
+[![SolidCraft 98 on YouTube](docs/screenshots/video.png)](https://youtu.be/7t6-iIu5gdg)
+
 SolidCraft 98 is a parametric CAD program written the way it would have
 been written in 1999: in Visual Basic, with an MDI window, a `TreeView`, a
 `ListView` in Report mode, and a wireframe viewport drawn with `Line`, one
