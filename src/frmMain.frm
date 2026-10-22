@@ -376,6 +376,18 @@ Private Sub picToolbar_MouseUp(Button As Integer, Shift As Integer, X As Single,
     If Button <> vbLeftButton Then Exit Sub
     sKey = ToolbarMouseUp(picToolbar, X, Y)
     If Len(sKey) > 0 Then RunCommand sKey
+    PartFocus
+End Sub
+
+Private Sub picStatus_MouseUp(Button As Integer, Shift As Integer, X As Single, Y As Single)
+    PartFocus
+End Sub
+
+' A click on the toolbar or the status bar gives them the keyboard, and the
+' part's keys (R, E, H...) would stop working. The part gets it back.
+Private Sub PartFocus()
+    On Error Resume Next
+    If Not ActiveForm Is Nothing Then ActiveForm.SetFocus
 End Sub
 
 ' VB has no MouseLeave, so a Timer checks whether the mouse is still there.
