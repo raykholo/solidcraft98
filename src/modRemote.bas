@@ -98,6 +98,7 @@ Private Declare Function GetSubMenu Lib "user32" (ByVal hMenu As Long, ByVal nPo
 Private Declare Function GetMenuItemCount Lib "user32" (ByVal hMenu As Long) As Long
 Private Declare Function GetMenuString Lib "user32" Alias "GetMenuStringA" (ByVal hMenu As Long, ByVal wIDItem As Long, ByVal lpString As String, ByVal nMaxCount As Long, ByVal wFlag As Long) As Long
 Private Declare Function GetMenuState Lib "user32" (ByVal hMenu As Long, ByVal wID As Long, ByVal wFlags As Long) As Long
+Private Declare Function GetMenuItemRect Lib "user32" (ByVal hWnd As Long, ByVal hMenu As Long, ByVal uItem As Long, lprcItem As RECT) As Long
 
 Private Const GW_HWNDNEXT As Long = 2
 Private Const GW_CHILD As Long = 5
@@ -134,7 +135,11 @@ Private mWaitUntil As Double
 Private mSteps() As String
 Private mStepHead As Long
 Private mStepTail As Long
-Private mGlideLeft As Long
+Private mGlideI As Long                  ' a glide in progress: tick i of n, from where
+Private mGlideN As Long
+Private mGlideX0 As Long
+Private mGlideY0 As Long
+Private mSkipClick As Long               ' a menu item picked by keyboard: skip the click queued for it
 Private mPauseUntil As Double
 
 ' What the last read-out found, and where.
@@ -273,16 +278,57 @@ Private Sub RunStep()
     w = Split(s, " ")
     Select Case w(0)
     Case "M"
-        ' a glide: a few steps of the way each tick, so the pointer is seen to move
+        ' a glide, the way a hand moves a mouse: longer for further, quick in
+        ' the middle and slowing at the end
         tx = CLng(w(1)): ty = CLng(w(2))
-        GetCursorPos cur
-        If mGlideLeft = 0 Then mGlideLeft = 8
-        SetCursorPos cur.x + (tx - cur.x) \ mGlideLeft, cur.y + (ty - cur.y) \ mGlideLeft
-        mGlideLeft = mGlideLeft - 1
-        If mGlideLeft > 0 Then Exit Sub
+        If mGlideN = 0 Then
+            GetCursorPos cur
+            mGlideX0 = cur.x: mGlideY0 = cur.y
+            mGlideN = Sqr((tx - cur.x) ^ 2 + (ty - cur.y) ^ 2) / 25
+            If mGlideN < 10 Then mGlideN = 10
+            If mGlideN > 30 Then mGlideN = 30
+            mGlideI = 0
+        End If
+        mGlideI = mGlideI + 1
+        Dim f As Double
+        f = mGlideI / mGlideN
+        f = f * f * (3 - 2 * f)
+        SetCursorPos mGlideX0 + (tx - mGlideX0) * f, mGlideY0 + (ty - mGlideY0) * f
+        If mGlideI < mGlideN Then Exit Sub
+        mGlideN = 0
         SetCursorPos tx, ty
-    Case "LD": mouse_event MOUSEEVENTF_LEFTDOWN, 0, 0, 0, 0
-    Case "LU": mouse_event MOUSEEVENTF_LEFTUP, 0, 0, 0, 0
+    Case "MT", "MI"
+        ' where a menu title or item is, asked for only now: an item's place
+        ' is known once its menu is open
+        Dim r As RECT, ok As Long
+        If w(0) = "MT" Then
+            ok = GetMenuItemRect(frmMain.hWnd, GetMenu(frmMain.hWnd), CLng(w(1)), r)
+        Else
+            ok = GetMenuItemRect(0, CLng(w(1)), CLng(w(2)), r)
+        End If
+        If ok <> 0 Then
+            mSteps(mStepHead) = "M " & ((r.Left + r.Right) \ 2) & " " & ((r.Top + r.Bottom) \ 2)
+            If w(0) = "MI" Then mSteps(mStepHead) = "M " & (r.Left + 40) & " " & ((r.Top + r.Bottom) \ 2)
+            Exit Sub
+        End If
+        ' Windows couldn't say: the keyboard, then, and no click
+        If w(0) = "MT" Then
+            keybd_event 18, 0, 0, 0
+            keybd_event CByte(VkKeyScan(Asc(LCase$(Mid$(MenuText(GetMenu(frmMain.hWnd), CLng(w(1))), InStr(MenuText(GetMenu(frmMain.hWnd), CLng(w(1))), "&") + 1, 1)))) And &HFF), 0, 0, 0
+            keybd_event CByte(VkKeyScan(Asc(LCase$(Mid$(MenuText(GetMenu(frmMain.hWnd), CLng(w(1))), InStr(MenuText(GetMenu(frmMain.hWnd), CLng(w(1))), "&") + 1, 1)))) And &HFF), 0, KEYEVENTF_KEYUP, 0
+            keybd_event 18, 0, KEYEVENTF_KEYUP, 0
+        Else
+            Dim k As Long
+            For k = 0 To CLng(w(2)) - 1
+                If (GetMenuState(CLng(w(1)), k, MF_BYPOSITION) And MF_SEPARATOR) = 0 Then keybd_event 40, 0, 0, 0: keybd_event 40, 0, KEYEVENTF_KEYUP, 0
+            Next k
+            keybd_event 13, 0, 0, 0: keybd_event 13, 0, KEYEVENTF_KEYUP, 0
+        End If
+        mSkipClick = 2
+    Case "LD"
+        If mSkipClick > 0 Then mSkipClick = mSkipClick - 1 Else mouse_event MOUSEEVENTF_LEFTDOWN, 0, 0, 0, 0
+    Case "LU"
+        If mSkipClick > 0 Then mSkipClick = mSkipClick - 1 Else mouse_event MOUSEEVENTF_LEFTUP, 0, 0, 0, 0
     Case "RD": mouse_event MOUSEEVENTF_RIGHTDOWN, 0, 0, 0, 0
     Case "RU": mouse_event MOUSEEVENTF_RIGHTUP, 0, 0, 0, 0
     Case "KD": keybd_event CByte(w(1)), CByte(MapVirtualKey(CLng(w(1)), 0)), 0, 0
@@ -297,6 +343,7 @@ End Sub
 
 Private Sub QueueClick(ByVal x As Long, ByVal y As Long, ByVal bRight As Boolean, ByVal bDouble As Boolean)
     AddStep "M " & x & " " & y
+    AddStep "P 90"
     AddStep IIf(bRight, "RD", "LD")
     AddStep IIf(bRight, "RU", "LU")
     If bDouble Then AddStep "LD": AddStep "LU"
@@ -828,24 +875,21 @@ Private Function MenuByName(ByVal nm As String) As Boolean
     Next i
 End Function
 
+' With the mouse, the way most people did: to the title, click.
 Private Sub OpenMenu(ByVal hBar As Long, ByVal i As Long)
-    Dim s As String, p As Long
-    s = MenuText(hBar, i)
-    p = InStr(s, "&")
-    AddStep "KD 18"
-    QueueKey VkKeyScan(Asc(LCase$(Mid$(s, p + 1, 1)))) And &HFF
-    AddStep "KU 18"
-    AddStep "P 150"
+    AddStep "MT " & i
+    AddStep "P 90"
+    AddStep "LD"
+    AddStep "LU"
+    AddStep "P 250"
 End Sub
 
-' Down to it, then Enter: works whether or not it has a letter.
+' Down the open menu to the item, click.
 Private Sub PickItem(ByVal hSub As Long, ByVal i As Long)
-    Dim k As Long
-    ' opened from the keyboard, the menu starts on its first item
-    For k = 0 To i - 1
-        If (GetMenuState(hSub, k, MF_BYPOSITION) And MF_SEPARATOR) = 0 Then QueueKey 40
-    Next k
-    QueueKey 13
+    AddStep "MI " & hSub & " " & i
+    AddStep "P 90"
+    AddStep "LD"
+    AddStep "LU"
 End Sub
 
 Private Sub RemoteDo(ByVal l As String)
