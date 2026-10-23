@@ -18,7 +18,8 @@ dependents; wireframe and shaded views; Save and Open; opening SolidCraft
 designs; Export for Rapid Prototyping (.stl); several part windows
 (cascade, tile, minimise); Turbo and every egg (Cal, the floppies, DLL
 Hell, the WIN98 credits, Y2K with `--y2ktest`, the blue screen, Konami,
-Publish to Web).
+Publish to Web), and the remote control, with `--remote` (see the main
+README).
 
 | File | What it does |
 |---|---|
@@ -30,6 +31,7 @@ Publish to Web).
 | `src/expr.bas` | Arithmetic in number boxes |
 | `src/zip.bas`, `json.bas`, `import.bas` | Opening SolidCraft designs |
 | `src/eggs.bas` | Turbo and the rest |
+| `src/remote.bas`, `tutor.bas` | Remote control (`--remote`): commands on standard input, and the tutor |
 | `tools/mkfont.py`, `mkicons.py` | Make `font.bi` and `icons.bi` from text pixel art |
 
 ## Building

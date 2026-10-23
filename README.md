@@ -277,6 +277,40 @@ Here the joke stays in this paragraph. The toolbar, the menus and the
 keyboard all call `RunCommand "Extrude"` in `modCommands.bas`, and there is
 one copy of each command.
 
+## Remote control
+
+Start it with `/REMOTE` and SolidCraft 98 listens on TCP port 9898, the way
+remote-administration tools of the day did. Telnet in and type one command
+per line. It answers in plain text, reading the screen out the way a screen
+reader does, and ends each answer with a line holding only a `.`.
+
+```
+look                    what's on the screen
+click <name>            a button, menu, field, toolbar button or feature
+doubleclick <name>      a feature in the timeline: edit it
+rightclick <name>
+menu <Menu> > <Item>    e.g. menu Features > Extrude...
+key <keys>              e.g. key enter, key tab, key ctrl+s
+type <text>
+drag <x1> <y1> <x2> <y2>
+wait <ms>
+how <words>             look it up in the help index, e.g. how hole
+yes                     take the step it just offered
+help, quit
+```
+
+Clicks and keys go in as real mouse and keyboard input, so anyone watching
+sees the pointer glide over and the letters appear. Every read-out ends
+with a `Tutor:` line saying what to do next, mistakes get "Did you mean
+...?", and `how` and the tutor offer a step that `yes` takes.
+
+Plain `/REMOTE` takes connections from this PC only. `/REMOTE:ANY` takes
+them from any computer, for driving it in a virtual machine from the host.
+Whoever connects works your real mouse and keyboard, so use it only on a
+network you trust. `/REMOTE:port` and `/REMOTE:port:ANY` pick another port.
+The Linux and Pi edition takes the same commands on standard input with
+`sc98 --remote`.
+
 ## Source
 
 The source is plain VB6 text: `src/SolidCraft98.vbp` plus `.frm` and `.bas`
@@ -304,7 +338,8 @@ drawn at startup.
 | `modTurbo.bas` | The Turbo button and the 1999 behaviour behind it |
 | `modExpr.bas` | Arithmetic in number boxes |
 | `modGif.bas`, `modPublish.bas` | GIF writer and Publish to Web |
-| `frmFloppy`, `frmFatal`, `frmSetup`, `frmCal`, `frmCredits` | The easter eggs |
+| `modRemote.bas`, `modTutor.bas` | Remote control, and its help index and tutor |
+| `frmFloppy`, `frmFatal`, `frmSetup`, `frmCal`, `frmCalPin`, `frmCredits` | The easter eggs |
 
 The toolbar and status bar are drawn by hand rather than taken from
 MSCOMCTL.OCX, because that OCX doesn't ship with current Windows. The

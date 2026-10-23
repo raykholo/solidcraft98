@@ -16,6 +16,8 @@ Attribute VB_Name = "modRemote"
 '   key <keys>                e.g. "key e", "key ctrl+s", "key enter"
 '   type <text>
 '   wait <ms>
+'   how <words>               look it up in the help index
+'   yes                       take the step just offered
 '   help
 '   quit                      ends SolidCraft 98 at once, nothing saved
 '
