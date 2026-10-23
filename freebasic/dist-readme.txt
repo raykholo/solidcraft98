@@ -1,4 +1,4 @@
-SolidCraft 98 for Linux and the Raspberry Pi  1.1.1
+SolidCraft 98 for Linux and the Raspberry Pi  1.2
 =================================================
 
 sc98-pi       Raspberry Pi 1 and up (ARMv6, 32-bit Raspberry Pi OS)

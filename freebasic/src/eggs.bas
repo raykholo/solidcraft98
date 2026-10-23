@@ -428,7 +428,7 @@ Sub DrawSplash()
     TextAt x + 330, y + 94, "98", &hFFFFFF00, True, 4
     Text x + 192, y + 136, "Professional Edition", C_FACE
     Text x + 16, y + 207, SplashMsg, C_HILITE
-    Text x + 16, y + 230, "Version 1.1.1  Build 1998.1021", C_FACE
+    Text x + 16, y + 230, "Version 1.2.0  Build 1998.1023", C_FACE
     Text x + 16, y + 246, "Copyright (C) 1998-1999 SolidCraft Software. Made with Line and Circle.", C_FACE
     Frame x, y, w, h, C_SHADOW
 End Sub
@@ -623,7 +623,7 @@ Sub PublishPart(ByVal p As Long)
     Print #fh, "</TR></TABLE></P>"
     Print #fh, "<P><A HREF=""#"">Sign my guestbook!</A> | <A HREF=""#"">View my guestbook!</A> | <A HREF=""#"">Next site in the CAD Web Ring &gt;&gt;</A></P>"
     Print #fh, "<HR WIDTH=""80%"">"
-    Print #fh, "<FONT SIZE=""2"">Best viewed in Netscape at 800x600. Made with SolidCraft 98 Version 1.1.1.<BR>"
+    Print #fh, "<FONT SIZE=""2"">Best viewed in Netscape at 800x600. Made with SolidCraft 98 Version 1.2.0.<BR>"
     Print #fh, "Last updated " & Format(ClockNow(), "mmmm d, yyyy") & ".</FONT>"
     Print #fh, "</CENTER>"
     Print #fh, "</BODY>"

@@ -41,7 +41,7 @@ SolidCraft 2000.</sub>
 
 ## Getting it
 
-Download `SolidCraft98-<version>.zip` (the newest is 1.1.1) from the
+Download `SolidCraft98-<version>.zip` (the newest is 1.2) from the
 [Releases page](../../releases), check its SHA-256 against the one listed
 there if you like, unzip it anywhere,
 and run `SolidCraft98.exe`. There's no installer and nothing to register:
@@ -58,12 +58,13 @@ virtual machine) and run `A:\SC98.EXE`.
 
 The same program, the same features and the same `.sc98` files, byte for
 byte, in two more languages from the period (or near enough). Both are on the
-[Releases page](../../releases) next to the Windows version.
+[Releases page](../../releases) next to the Windows version. The remote
+control is in the Linux and Pi one too, but not yet in the Delphi Edition.
 
 | Edition | Runs on | Written in | Download |
 |---|---|---|---|
-| [Delphi Edition](delphi/) | Windows, ReactOS, Linux, Raspberry Pi | Object Pascal (Free Pascal and Lazarus) | `SolidCraft98-Delphi-1.1.1.zip` |
-| [Linux and Raspberry Pi](freebasic/) | Linux, and a Raspberry Pi from 2014 (ARMv6) | FreeBASIC, every pixel drawn by hand | `SolidCraft98-Linux-1.1.1.tar.gz` |
+| [Delphi Edition](delphi/) | Windows, ReactOS, Linux, Raspberry Pi | Object Pascal (Free Pascal and Lazarus) | `SolidCraft98-Delphi-1.2.zip` |
+| [Linux and Raspberry Pi](freebasic/) | Linux, and a Raspberry Pi from 2014 (ARMv6) | FreeBASIC, every pixel drawn by hand | `SolidCraft98-Linux-1.2.tar.gz` |
 
 ## The book
 

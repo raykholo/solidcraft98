@@ -1,18 +1,18 @@
 # SolidCraft 98 for Linux and the Raspberry Pi
 
-SolidCraft 98 1.1.1, ported to FreeBASIC. It runs on 64-bit PC Linux and on
+SolidCraft 98 1.2, ported to FreeBASIC. It runs on 64-bit PC Linux and on
 an original Raspberry Pi from 2014 (ARMv6, 512 MB). There's no toolkit:
 every window, menu and button is drawn by the program itself in the Windows
 98 style, in its own pixel font, so it looks the same on every machine.
 `.sc98` files are byte for byte the Windows version's, both ways.
 
-Download `SolidCraft98-Linux-1.1.1.tar.gz` from the
+Download `SolidCraft98-Linux-1.2.tar.gz` from the
 [Releases page](https://github.com/raykholo/solidcraft98/releases): `sc98-pi` for the Pi, `sc98-x86_64` for
 a PC. Its `README.TXT` says what a Pi without a desktop needs.
 
 ## What's in it
 
-Everything the Windows version 1.1.1 does: parts with the feature tree,
+Everything the Windows version 1.2 does: parts with the feature tree,
 view and timeline; sketch, extrude, revolve, hole; edit and delete with
 dependents; wireframe and shaded views; Save and Open; opening SolidCraft
 designs; Export for Rapid Prototyping (.stl); several part windows

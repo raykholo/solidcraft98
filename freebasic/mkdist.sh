@@ -8,7 +8,7 @@ if [ "$1" != --pack-only ]; then
   podman run --rm -v "$PWD":/w:Z -w /w sc98-fb-x86 strip build/sc98
   ./build-arm.sh > /dev/null
 fi
-V=1.1.1
+V=1.2
 D=dist/SolidCraft98-Linux-$V
 rm -rf dist && mkdir -p "$D/Samples"
 cp build/sc98 "$D/sc98-x86_64"

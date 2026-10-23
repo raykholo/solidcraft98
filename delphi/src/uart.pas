@@ -11,8 +11,8 @@ uses Graphics, Controls, ImgList;
 const
   APP_NAME = 'SolidCraft 98';
   APP_EDITION = 'Delphi Edition';
-  APP_BUILD = 'Build 1998.1021';
-  APP_VERSION = 'Version 1.1.1';
+  APP_BUILD = 'Build 1998.1023';
+  APP_VERSION = 'Version 1.2.0';
 
 var
   QB: array[0..15] of TColor;

@@ -3,8 +3,8 @@
 
 Const APP_NAME = "SolidCraft 98"
 Const APP_EDITION = "Professional Edition"
-Const APP_BUILD = "Build 1998.1021"
-Const APP_VERSION = "Version 1.1.1"
+Const APP_BUILD = "Build 1998.1023"
+Const APP_VERSION = "Version 1.2.0"
 Const PART_EXT = "sc98"
 
 Dim Shared FullScreenMode As Boolean

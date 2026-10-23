@@ -1,5 +1,5 @@
-SolidCraft 98 Delphi Edition  1.1.1
-===================================
+SolidCraft 98 Delphi Edition  1.2
+=================================
 
 SolidCraft98.exe   Windows (and ReactOS)
 sc98-x86_64        64-bit PC Linux

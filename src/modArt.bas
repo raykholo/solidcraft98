@@ -5,7 +5,7 @@ Option Explicit
 
 Public Const APP_NAME As String = "SolidCraft 98"
 Public Const APP_EDITION As String = "Professional Edition"
-Public Const APP_BUILD As String = "Build 1998.1021"
+Public Const APP_BUILD As String = "Build 1998.1023"
 
 Public Function AppVersion() As String
     AppVersion = "Version " & App.Major & "." & App.Minor & "." & App.Revision

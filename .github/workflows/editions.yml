@@ -3,7 +3,7 @@ name: Editions
 # Builds the Delphi Edition (Windows, Linux, Raspberry Pi) and the FreeBASIC
 # version (Linux, Raspberry Pi), runs each on a virtual screen, and packs the
 # release downloads. The Pi builds run in an emulated ARMv6 Raspberry Pi OS.
-# Run it by hand with a release tag (such as v1.1.1) to attach the downloads
+# Run it by hand with a release tag (such as v1.2) to attach the downloads
 # to that release.
 
 on:

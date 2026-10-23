@@ -1,11 +1,12 @@
 # SolidCraft 98 Delphi Edition
 
-SolidCraft 98 1.1.1 in Object Pascal, built with Free Pascal and Lazarus:
+SolidCraft 98 1.2 in Object Pascal, built with Free Pascal and Lazarus:
 the Delphi 4 way, with real widgets. One source for Windows (and ReactOS),
 64-bit PC Linux and the Raspberry Pi 1 and up. Same features as the Visual
-Basic version, and the same `.sc98` files byte for byte.
+Basic version (all but the remote control), and the same `.sc98` files byte
+for byte.
 
-Download `SolidCraft98-Delphi-1.1.1.zip` from the
+Download `SolidCraft98-Delphi-1.2.zip` from the
 [Releases page](https://github.com/raykholo/solidcraft98/releases). It has `SolidCraft98.exe` for Windows,
 `sc98-x86_64` for Linux and `sc98-pi` for the Pi. The Linux ones need GTK 2
 (`sudo apt install libgtk2.0-0`).

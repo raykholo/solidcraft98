@@ -4,7 +4,7 @@
 # (./build-arm.sh) and build/win/SolidCraft98.exe (Lazarus on Windows).
 set -e
 cd "$(dirname "$0")"
-V=1.1.1
+V=1.2
 D=dist/SolidCraft98-Delphi-$V
 rm -rf dist && mkdir -p "$D/Samples"
 cp build/SolidCraft98 "$D/sc98-x86_64"
