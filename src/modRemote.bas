@@ -2,7 +2,8 @@ Attribute VB_Name = "modRemote"
 ' modRemote - remote control. Started with /REMOTE (or /REMOTE:port),
 ' SolidCraft 98 listens on TCP port 9898, the way remote-administration
 ' tools of the day did, and takes one command per line from whoever
-' connects. It answers in text, reading the screen the way a screen reader
+' connects. Only from this PC, unless it says /REMOTE:ANY (or
+' /REMOTE:port:ANY): whoever connects works the real mouse and keys. It answers in text, reading the screen the way a screen reader
 ' does. Each answer ends with a line holding a single ".".
 '
 '   look                      what's on the screen
@@ -162,10 +163,18 @@ Private mTgN As Long
 ' From Sub Main: listens if the command line says /REMOTE.
 Public Sub RemoteStart()
     Dim p As Long, i As Long, wsa As WSADATA, addr As SOCKADDR_IN, nb As Long
+    Dim opt As String, anyHost As Boolean
     i = InStr(1, Command$, "/REMOTE", vbTextCompare)
     If i = 0 Then Exit Sub
+    ' the options run to the next space: ":port", ":ANY", or both
+    opt = Mid$(Command$, i + 7)
+    If InStr(opt, " ") Then opt = Left$(opt, InStr(opt, " ") - 1)
+    opt = UCase$(opt) & ":"
+    anyHost = InStr(opt, ":ANY:") > 0
     p = DEFAULT_PORT
-    If Mid$(Command$, i + 7, 1) = ":" Then p = Val(Mid$(Command$, i + 8))
+    If Left$(opt, 1) = ":" Then
+        If Val(Mid$(opt, 2)) > 0 Then p = Val(Mid$(opt, 2))
+    End If
     If p <= 0 Or p > 32767 Then p = DEFAULT_PORT
     ReDim mSteps(0 To 2047)
     mListen = INVALID_SOCKET: mClient = INVALID_SOCKET
@@ -174,13 +183,17 @@ Public Sub RemoteStart()
     If mListen = INVALID_SOCKET Then Exit Sub
     addr.sin_family = AF_INET
     addr.sin_port = ws_htons(CInt(p))
-    addr.sin_addr = 0                    ' any address
+    If anyHost Then
+        addr.sin_addr = 0                ' any address
+    Else
+        addr.sin_addr = &H100007F        ' 127.0.0.1, in network order
+    End If
     If ws_bind(mListen, addr, LenB(addr)) <> 0 Then ws_closesocket mListen: mListen = INVALID_SOCKET: Exit Sub
     ws_listen mListen, 1
     nb = 1
     ws_ioctlsocket mListen, FIONBIO, nb
     SetTimer 0, 0, TICK_MS, AddressOf RemoteTick
-    frmMain.SetStatus "Remote control: listening on port " & p & "."
+    frmMain.SetStatus "Remote control: listening on port " & p & IIf(anyHost, ", for any computer.", ", for this PC only.")
 End Sub
 
 ' ---- the connection ----
