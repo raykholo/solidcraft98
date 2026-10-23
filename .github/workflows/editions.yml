@@ -33,9 +33,15 @@ jobs:
     steps:
       - uses: actions/checkout@v7
       - name: Get Lazarus
+        timeout-minutes: 8
+        env: { DEBIAN_FRONTEND: noninteractive }
         run: |
+          # no man pages: their index can take minutes, and nothing here reads them
+          echo "set man-db/auto-update false" | sudo debconf-communicate > /dev/null || true
+          sudo rm -f /var/lib/man-db/auto-update
           sudo apt-get update -qq
-          sudo apt-get install -y -qq lazarus-ide-gtk2 lcl-gtk2 lcl-utils fpc xvfb xdotool imagemagick > /dev/null
+          sudo -E apt-get install -y -q -o Dpkg::Options::=--force-confdef -o Dpkg::Options::=--force-confold \
+              lazarus-ide-gtk2 lcl-gtk2 lcl-utils fpc xvfb xdotool imagemagick < /dev/null
       - name: Build
         working-directory: delphi
         run: lazbuild -q SolidCraft98.lpi && ls -la build/SolidCraft98
