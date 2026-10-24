@@ -20,6 +20,13 @@
 
 [![SolidCraft 98 on YouTube](docs/screenshots/video.png)](https://youtu.be/7t6-iIu5gdg)
 
+**Talk about it:** discuss SolidCraft 98 on the [Dutchman CAD Discord](https://discord.gg/yTcseBEdeu),
+in #solidcraft98-updates and #solidcraft98-chat.
+
+**Let a model drive it:** [Dutchman Pilot](https://github.com/dutchman-cad/pilot)
+helps small local AI models use SolidCraft 98's [remote control](#remote-control).
+It works with SolidCraft 98 from the next Pilot release.
+
 SolidCraft 98 is a parametric CAD program written the way it would have
 been written in 1999: in Visual Basic, with an MDI window, a `TreeView`, a
 `ListView` in Report mode, and a wireframe viewport drawn with `Line`, one
@@ -311,6 +318,10 @@ Whoever connects works your real mouse and keyboard, so use it only on a
 network you trust. `/REMOTE:port` and `/REMOTE:port:ANY` pick another port.
 The Linux and Pi edition takes the same commands on standard input with
 `sc98 --remote`.
+
+[Dutchman Pilot](https://github.com/dutchman-cad/pilot) drives SolidCraft 98
+through it, so small local AI models can use the program. It works with
+SolidCraft 98 from the next Pilot release.
 
 ## Source
 
