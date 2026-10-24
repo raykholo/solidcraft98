@@ -24,8 +24,8 @@
 in #solidcraft98-updates and #solidcraft98-chat.
 
 **Let a model drive it:** [Dutchman Pilot](https://github.com/dutchman-cad/pilot)
-helps small local AI models use SolidCraft 98's [remote control](#remote-control).
-It works with SolidCraft 98 from the next Pilot release.
+helps small local AI models use SolidCraft 98's [remote control](#remote-control),
+from [Pilot 0.1.0-beta.3](https://github.com/dutchman-cad/pilot/releases/tag/v0.1.0-beta.3) on.
 
 SolidCraft 98 is a parametric CAD program written the way it would have
 been written in 1999: in Visual Basic, with an MDI window, a `TreeView`, a
@@ -320,8 +320,9 @@ The Linux and Pi edition takes the same commands on standard input with
 `sc98 --remote`.
 
 [Dutchman Pilot](https://github.com/dutchman-cad/pilot) drives SolidCraft 98
-through it, so small local AI models can use the program. It works with
-SolidCraft 98 from the next Pilot release.
+through it, so small local AI models can use the program: get
+[Pilot 0.1.0-beta.3](https://github.com/dutchman-cad/pilot/releases/tag/v0.1.0-beta.3) or later, and start SolidCraft 98 with
+`/REMOTE:ANY` if Pilot runs on another computer.
 
 ## Source
 
