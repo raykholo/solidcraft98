@@ -322,7 +322,9 @@ The Linux and Pi edition takes the same commands on standard input with
 [Dutchman Pilot](https://github.com/dutchman-cad/pilot) drives SolidCraft 98
 through it, so small local AI models can use the program: get
 [Pilot 0.1.0-beta.3](https://github.com/dutchman-cad/pilot/releases/tag/v0.1.0-beta.3) or later, and start SolidCraft 98 with
-`/REMOTE:ANY` if Pilot runs on another computer.
+`/REMOTE:ANY` if Pilot runs on another computer or on the host of a virtual
+machine. Pilot's [SolidCraft 98 guide](https://github.com/dutchman-cad/pilot/blob/main/docs/solidcraft98.md)
+has the rest.
 
 ## Source
 
