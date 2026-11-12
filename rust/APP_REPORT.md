@@ -36,7 +36,7 @@ format checking passes. The PC release build passes, and a real Unix PTY smoke
 test checks probe handling, rectangle/extrude, save/STL, quit and exact termios
 restoration. [The terminal capture](docs/terminal-app.png) is reconstructed from
 the executable's actual ANSI output; its colour/cursor/PNG helper also passes a
-small independent pixel/CRC check. Linked firmware sizes are recorded below. All Cargo commands use the `solidcraft98` queue and this worktree;
+small independent pixel/CRC check. Linked firmware sizes are recorded below. 
 only targeted crate/test-file tests and crate clippy are authorized locally.
 The full workspace suite is reserved for CI after push. Changes remain
 unstaged, and `COMMIT_MSG.txt` contains the proposed commit message.
@@ -48,7 +48,7 @@ ESP dependencies. Its first C3 check stopped because its Rust toolchain lacks
 the RISC-V target; this was not a source-code compilation result. The local
 builder has the target installed on stable release toolchains.
 
-Commands run through `buildq run solidcraft98 /home/ray/builds/worktrees/sc98-m0 --`:
+Commands run:
 
 | Cargo arguments (all use `--manifest-path rust/Cargo.toml`) | Final result |
 |---|---|
@@ -160,7 +160,7 @@ Per-crate attribution is unavailable: cargo-bloat is not installed, and the
 release symbols are stripped. The section breakdown above supplies the linked
 measurement. ELF SHA-256: `dac3a2a0d5efa1a5d10cfd34697e02fb8d645cd4b44e7f840e3e07666411a133`.
 
-The completed commands (same buildq prefix and manifest path as above):
+The completed commands:
 
 - `cargo +1.98.0 build -p sc98-esp32 --release --target riscv32imc-unknown-none-elf`: pass.
 - `cargo +1.98.0 clippy -p sc98-esp32 --bin sc98-esp32 --release --target riscv32imc-unknown-none-elf -- -D warnings`: pass.
