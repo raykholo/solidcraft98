@@ -152,7 +152,7 @@ fn old_versions_convert_like_the_other_editions() {
     for (version, conversion) in [(3i16, Conversion::Version3), (4, Conversion::Version4)] {
         let mut old = bytes[..72].to_vec();
         old[4..6].copy_from_slice(&version.to_le_bytes());
-        for f in bytes[72..].chunks_exact(134) {
+        for f in bytes[72..].as_chunks::<134>().0 {
             old.extend_from_slice(&f[..70]);
             if version == 4 {
                 old.extend_from_slice(&f[70..78]);
@@ -164,7 +164,7 @@ fn old_versions_convert_like_the_other_editions() {
         assert_eq!(load.part.features().len(), 9);
         let mut expected = bytes.clone();
         if version == 3 {
-            for f in expected[72..].chunks_exact_mut(134) {
+            for f in expected[72..].as_chunks_mut::<134>().0 {
                 f[70..78].fill(0);
             }
         }
@@ -266,9 +266,9 @@ fn box_stl_normals_colours_and_translation() {
     assert_eq!(&bytes[..35], b"Binary STL from SolidCraft 98: Box,");
     assert_eq!(bytes.len(), 84 + 50 * 12);
     assert_eq!(u32::from_le_bytes(bytes[80..84].try_into().unwrap()), 12);
-    for record in bytes[84..].chunks_exact(50) {
-        for n in record[12..48].chunks_exact(4) {
-            assert!(f32::from_le_bytes(n.try_into().unwrap()) >= 0.0);
+    for record in bytes[84..].as_chunks::<50>().0 {
+        for n in record[12..48].as_chunks::<4>().0 {
+            assert!(f32::from_le_bytes(*n) >= 0.0);
         }
         assert_eq!(&record[48..], [0, 0]);
     }
