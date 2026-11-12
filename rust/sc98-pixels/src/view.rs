@@ -190,7 +190,19 @@ pub fn render<F: Framebuffer, P: Part + ?Sized>(
         );
     }
     let tris = part.triangles();
-    if style == Style::Wireframe {
+    if style == Style::Wireframe && !part.edges().is_empty() {
+        for edge in part.edges() {
+            segment(
+                c,
+                v,
+                r,
+                axes,
+                edge.vertices[0],
+                edge.vertices[1],
+                edge.color,
+            );
+        }
+    } else if style == Style::Wireframe {
         for t in tris.iter().filter(|t| t.finite()) {
             for k in 0..3 {
                 if boundary_edge(tris, t, k) {

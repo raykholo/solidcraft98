@@ -82,7 +82,7 @@ pub enum Action {
     Command(Command),
     Parameters {
         command: Command,
-        values: [Scalar; 7],
+        values: [f64; 7],
         count: usize,
     },
 }
@@ -216,7 +216,13 @@ impl Number {
         core::str::from_utf8(&self.bytes[..self.len]).unwrap_or("")
     }
     fn push(&mut self, ch: char) {
-        if self.len < 24 && (ch.is_ascii_digit() || matches!(ch, '.' | '-' | '+' | 'e' | 'E')) {
+        if self.len < 24
+            && (ch.is_ascii_digit()
+                || matches!(
+                    ch,
+                    '.' | '-' | '+' | 'e' | 'E' | '*' | '/' | '(' | ')' | ' '
+                ))
+        {
             self.bytes[self.len] = ch as u8;
             self.len += 1;
         }
@@ -241,6 +247,8 @@ pub struct App {
     pub turbo: bool,
     pub status: &'static str,
     pub message: &'static str,
+    /// Number evaluator supplied by the program (for arithmetic expressions).
+    pub evaluate: fn(&str) -> Result<f64, u8>,
     numbers: [Number; 7],
     field: usize,
     field_count: usize,
@@ -262,6 +270,7 @@ impl App {
             turbo: false,
             status: "Ready",
             message: "",
+            evaluate: |text| text.parse::<f64>().map_err(|_| 13),
             numbers: [Number::new(); 7],
             field: 0,
             field_count: 0,
@@ -531,6 +540,23 @@ impl App {
         }
         Action::Command(command)
     }
+    /// Start a number dialog using the model's current values. Editing an
+    /// existing feature uses its kind so all of its parameters remain visible.
+    pub fn set_parameters(&mut self, command: Command, values: &[&str]) {
+        self.field_count = field_names(command).len();
+        self.field = 0;
+        self.dialog = Dialog::Numbers(command);
+        for (i, number) in self.numbers.iter_mut().enumerate() {
+            number.set(values.get(i).copied().unwrap_or("0"));
+        }
+    }
+    /// Hosts can evaluate arithmetic before accepting a number dialog.
+    pub fn parameter_texts(&self) -> [&str; 7] {
+        core::array::from_fn(|i| self.numbers[i].text())
+    }
+    pub fn parameter_count(&self) -> usize {
+        self.field_count
+    }
     fn visible_fields(&self) -> usize {
         if self.layout == Layout::Compact {
             self.field_count.min(3)
@@ -608,8 +634,13 @@ impl App {
         if let Dialog::Numbers(command) = self.dialog {
             let mut values = [0.; 7];
             for (i, n) in self.numbers.iter().take(self.field_count).enumerate() {
-                match n.text().parse::<Scalar>() {
+                match (self.evaluate)(n.text()) {
                     Ok(v) if v.is_finite() => values[i] = v,
+                    Err(11) => {
+                        self.status = "Run-time error '11': Division by zero";
+                        self.field = i;
+                        return Action::None;
+                    }
                     _ => {
                         self.status = "Run-time error '13': Type mismatch";
                         self.field = i;
