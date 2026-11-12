@@ -13,3 +13,5 @@ __pycache__/
 # CI build output
 /out/
 /dist-out/
+
+/rust/target/
