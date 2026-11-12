@@ -1,0 +1,13 @@
+[package]
+name = "sc98-app"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+
+[dependencies]
+sc98-core = { path = "../sc98-core" }
+sc98-pixels = { path = "../sc98-pixels" }
+sc98-term = { path = "../sc98-term" }
+
+[dev-dependencies]
+png = "0.17"

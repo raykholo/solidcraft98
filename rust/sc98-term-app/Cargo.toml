@@ -1,0 +1,12 @@
+[package]
+name = "sc98-term-app"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+
+[dependencies]
+sc98-app = { path = "../sc98-app" }
+sc98-pixels = { path = "../sc98-pixels" }
+sc98-term = { path = "../sc98-term" }
+crossterm = { version = "0.28", default-features = false, features = ["events", "windows"] }
+sc98-core = { path = "../sc98-core" }

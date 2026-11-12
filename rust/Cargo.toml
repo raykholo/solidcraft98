@@ -1,5 +1,6 @@
 [workspace]
-members = ["sc98-core", "sc98-pixels", "sc98-desktop", "sc98-term", "sc98-term-demo"]
+members = ["sc98-core", "sc98-pixels", "sc98-desktop", "sc98-term", "sc98-term-demo", "sc98-app", "sc98-term-app", "sc98-esp32"]
+default-members = ["sc98-core", "sc98-pixels", "sc98-desktop", "sc98-term", "sc98-term-demo", "sc98-app", "sc98-term-app"]
 resolver = "2"
 
 [workspace.package]

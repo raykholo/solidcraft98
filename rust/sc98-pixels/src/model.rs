@@ -77,10 +77,18 @@ impl Triangle {
         self.normal.finite() && self.vertices.iter().all(|p| p.finite())
     }
 }
+#[derive(Clone, Copy, Debug)]
+pub struct Edge {
+    pub vertices: [Vec3; 2],
+    pub color: Color,
+}
 pub trait Part {
     fn name(&self) -> &str;
     fn features(&self) -> &[Feature<'_>];
     fn triangles(&self) -> &[Triangle];
+    fn edges(&self) -> &[Edge] {
+        &[]
+    }
 }
 
 pub const DEMO_FEATURES: [Feature<'static>; 4] = [
