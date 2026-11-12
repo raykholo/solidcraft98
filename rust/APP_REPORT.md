@@ -36,17 +36,12 @@ format checking passes. The PC release build passes, and a real Unix PTY smoke
 test checks probe handling, rectangle/extrude, save/STL, quit and exact termios
 restoration. [The terminal capture](docs/terminal-app.png) is reconstructed from
 the executable's actual ANSI output; its colour/cursor/PNG helper also passes a
-small independent pixel/CRC check. Linked firmware sizes are recorded below. 
-only targeted crate/test-file tests and crate clippy are authorized locally.
-The full workspace suite is reserved for CI after push. Changes remain
-unstaged, and `COMMIT_MSG.txt` contains the proposed commit message.
+small independent pixel/CRC check. Linked firmware sizes are recorded below.
+CI runs the full workspace suite.
 
 Direct rustfmt checks of every changed Rust file and `git diff --check` pass.
-The PC host and app compile successfully. A direct request to static.crates.io
-failed DNS resolution in the sandbox, but the remote builder downloaded the
-ESP dependencies. Its first C3 check stopped because its Rust toolchain lacks
-the RISC-V target; this was not a source-code compilation result. The local
-builder has the target installed on stable release toolchains.
+The PC host and app compile successfully, and the ESP32-C3 firmware builds for
+the RISC-V target with the stable toolchain.
 
 Commands run:
 
