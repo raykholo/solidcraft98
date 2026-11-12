@@ -165,10 +165,7 @@ The completed commands:
 - `cargo +1.98.0 build -p sc98-esp32 --release --target riscv32imc-unknown-none-elf`: pass.
 - `cargo +1.98.0 clippy -p sc98-esp32 --bin sc98-esp32 --release --target riscv32imc-unknown-none-elf -- -D warnings`: pass.
 
-The target clippy run used `RUST_LOG=warn` in the buildq client environment so
-it stayed on the local builder with the installed target. Attempts routed to
-the XPS failed before source checking because that worker lacks the target.
-The first local build caught the esp-alloc 0.6 macro's positional argument;
+The first build caught the esp-alloc 0.6 macro's positional argument;
 that was fixed before the passing release build. The gated original-ESP32
 UART path uses the HAL's nonblocking `read_buffered_bytes` API. Cargo reports
 a dependency future-compatibility advisory for proc-macro-error2 2.0.1; current
