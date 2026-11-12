@@ -20,7 +20,7 @@ Command: `cargo test -p sc98-desktop --test render frame_time_300_triangles --re
 
 ## RV32 release size
 
-`sc98-pixels` and its linked `size_probe` example built successfully for
+`sc98-pixels` and its linked `pixels_size_probe` example built successfully for
 `riscv32imc-unknown-none-elf`, using the workspace's size-oriented release
 settings. The target was initially unavailable; it became available during
 this session, and both cross-builds subsequently passed.
@@ -28,7 +28,7 @@ this session, and both cross-builds subsequently passed.
 | Artifact | Bytes |
 |---|---:|
 | Library archive `libsc98_pixels.rlib` | 561,942 |
-| Stripped linked `size_probe` ELF file | 87,460 |
+| Stripped linked `pixels_size_probe` ELF file | 87,460 |
 | Linked text/read-only data reported by `size` | 86,716 |
 | Linked initialized data / BSS | 0 / 0 |
 
