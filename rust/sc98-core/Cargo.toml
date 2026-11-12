@@ -1,0 +1,16 @@
+[package]
+name = "sc98-core"
+version = "0.1.0"
+edition = "2021"
+license = "MIT"
+description = "SolidCraft 98 parts, geometry and compatible files"
+
+[features]
+default = []
+import = ["dep:serde_json", "dep:miniz_oxide", "dep:crc32fast"]
+
+[dependencies]
+libm = "0.2"
+serde_json = { version = "1", default-features = false, features = ["alloc"], optional = true }
+miniz_oxide = { version = "0.8", default-features = false, features = ["with-alloc"], optional = true }
+crc32fast = { version = "1", default-features = false, optional = true }

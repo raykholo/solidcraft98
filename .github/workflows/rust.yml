@@ -1,0 +1,48 @@
+name: Embedded Edition
+
+on:
+  push:
+    paths: ["rust/**", "samples/**", "freebasic/src/**", "freebasic/tests/**", "delphi/tests/**", ".github/workflows/rust.yml"]
+  pull_request:
+    paths: ["rust/**", "samples/**", "freebasic/src/**", "freebasic/tests/**", "delphi/tests/**", ".github/workflows/rust.yml"]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  rust:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    defaults:
+      run:
+        working-directory: rust
+    steps:
+      - uses: actions/checkout@v7
+      - name: Install Rust tools and RISC-V target
+        run: |
+          rustup toolchain install stable --profile minimal --component clippy,rustfmt --target riscv32imc-unknown-none-elf
+          rustup default stable
+      - name: Window system libraries (desktop preview)
+        run: sudo apt-get update && sudo apt-get install -y libx11-dev libxkbcommon-dev libwayland-dev libxcursor-dev libxrandr-dev
+      - name: Format
+        run: cargo fmt --all --check
+      - name: Check the core without std
+        run: cargo check --locked -p sc98-core --no-default-features
+      - name: Test
+        run: cargo test --locked --workspace --all-features
+      - name: Clippy
+        run: cargo clippy --locked --workspace --all-targets --all-features -- -D warnings
+      - name: RISC-V release builds and sizes
+        run: |
+          {
+            echo "### Embedded Edition on RISC-V (riscv32imc, opt-level z)"
+            cargo build --locked -p sc98-core --release --no-default-features --target riscv32imc-unknown-none-elf
+            echo "- sc98-core release archive: $(stat -c %s target/riscv32imc-unknown-none-elf/release/libsc98_core.rlib) bytes (includes Rust metadata)"
+            cargo build --locked -p sc98-pixels --release --target riscv32imc-unknown-none-elf
+            echo "- sc98-pixels release archive: $(stat -c %s target/riscv32imc-unknown-none-elf/release/libsc98_pixels.rlib) bytes (includes Rust metadata)"
+            cargo build --locked -p sc98-term --release --features size-probe --example term_size_probe --target riscv32imc-unknown-none-elf
+            echo '- sc98-term linked probe:'; echo '```'; size -A target/riscv32imc-unknown-none-elf/release/examples/term_size_probe; echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
+      - name: Terminal bandwidth measurement
+        run: cargo run --locked --release -p sc98-term-demo -- --measure

@@ -1,0 +1,13 @@
+[package]
+name = "sc98-term"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+description = "Allocation-free framebuffer and input transport for ANSI terminals"
+
+[features]
+size-probe = []
+
+[[example]]
+name = "term_size_probe"
+required-features = ["size-probe"]

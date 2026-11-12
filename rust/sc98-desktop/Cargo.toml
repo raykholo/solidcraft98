@@ -1,0 +1,11 @@
+[package]
+name = "sc98-desktop"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+
+[dependencies]
+sc98-pixels = { path = "../sc98-pixels" }
+minifb = { version = "0.28", default-features = false, features = ["x11"] }
+png = "0.17"
+libm = "0.2"
