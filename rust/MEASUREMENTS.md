@@ -97,7 +97,5 @@ section and file sizes. No hardware timing or USB throughput was measured.
   Ctrl-L, resize, mode changes, mouse reports, Ctrl-Q, exit sequences and exact
   restoration of the original termios settings.
 
-Initial runs exposed a malformed-CPR decoding bug and clippy findings; these
-were fixed and their targeted checks passed on rerun. No full local suite was
-run. CI is configured for the full workspace, formatting, clippy, RISC-V
-release builds and byte measurements after commit/push by the coordinator.
+CI runs the full workspace, formatting, clippy, the RISC-V release builds and
+these byte measurements on every push.
