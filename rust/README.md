@@ -1,6 +1,6 @@
 # SolidCraft 98: Embedded Edition
 
-The fourth edition of SolidCraft 98, in Rust, built for embedded: it can run on a potato. The same features and the same
+The fourth edition of SolidCraft 98: a complete workshop in your terminal. The same features and the same
 `.sc98` files, byte for byte, as the Windows, Delphi and Linux editions, on a small `no_std` core that fits a
 microcontroller, with a desktop window for trying it out and a screen that is any terminal over a USB cable.
 
@@ -13,9 +13,114 @@ microcontroller, with a desktop window for trying it out and a screen that is an
 | `sc98-pixels` | The Windows 98 look drawn by hand into a framebuffer: font, icons, widgets, the 3D view (wireframe and shaded). `no_std`. |
 | `sc98-desktop` | A desktop window showing the classic 640 × 480 or compact 320 × 240 layout. |
 | `sc98-term` | The screen as ANSI terminal output (half-blocks for shaded, Braille dots for wireframe), only changed cells sent, keys and mouse back. `no_std`. |
+| `sc98-app` | The program: real parts, commands, parameter dialogs, save/open and STL export. `no_std` + `alloc`. |
+| `sc98-term-app` | SolidCraft 98 in a PC terminal, with files in the current directory. |
+| `sc98-esp32` | The same program over USB serial or UART, with a volatile RAM file store. |
 | `sc98-term-demo` | The terminal screen in a PC terminal, no microcontroller needed. |
 
 The core's own notes are in [`sc98-core/README.md`](sc98-core/README.md).
+
+## Run SolidCraft 98 in a terminal
+
+![SolidCraft 98 in a terminal, showing the real Mounting Plate](docs/terminal-app.png)
+
+From the repository root:
+
+```sh
+cargo run --manifest-path rust/Cargo.toml --release -p sc98-term-app
+cargo run --manifest-path rust/Cargo.toml --release -p sc98-term-app -- --classic
+cargo run --manifest-path rust/Cargo.toml --release -p sc98-term-app -- --new
+```
+
+The first command opens the Mounting Plate sample in the compact desktop.
+`--classic` selects 640 × 480; compact is 320 × 240. A large terminal, ideally
+320 × 120 cells, preserves every compact pixel; 160 × 60 gives an overview. True colour and Unicode
+half-blocks give the best picture. Both shaded and wireframe views use the
+coloured desktop; S changes the model's rendering, while the terminal encoder
+continues to send only changed cells. There is no rotating demo scene.
+
+Ctrl-N starts a new part, R sketches a rectangle, C a circle, E extrudes,
+V revolves and H drills a hole. New sketches use the selected extrude's top
+face; holes use that face or the last extrude. Up/Down selects a feature,
+Enter edits all its numbers and Del deletes it. Deleting a feature with
+children asks for confirmation: Enter accepts, Escape cancels. Ctrl-Z removes
+the last feature. Left/Right rotates; I restores isometric; F fits; +/− and
+the wheel zoom; left-drag orbits and right-drag pans.
+
+Click menus or use Alt-F/E/S/T/V/W/H, then arrows and Enter. Tab opens the
+compact Tools / Features drawer. Number fields start with useful defaults;
+Backspace changes them, Tab advances and Enter accepts. Arithmetic such as
+`80/2` is supported. Compact dialogs page through three fields at a time.
+
+Ctrl-S saves `.sc98` bytes; Ctrl-O opens them. Save As and File > Export for
+Rapid Prototyping ask for a file name. Backspace edits the name, Enter accepts
+and Escape cancels. Files live in the current directory; file names can include
+subdirectories within it. Existing files with the same name are replaced.
+An optional `.sc98` argument opens that file at startup. Ctrl-Q or File > Exit
+restores the terminal. New, Close and Exit discard unsaved changes; save first.
+The Floppy, Publish and Window menu entries show period messages or single-part
+status; floppy simulation, web publication and multiple documents are not present.
+
+Capture a reproducible ANSI first frame without raw mode:
+
+```sh
+cargo run --manifest-path rust/Cargo.toml --release -p sc98-term-app -- --capture > solidcraft98.ansi
+```
+
+Unix terminals use bounded raw byte reads and `sc98-term`'s decoder, including
+fragmented escape sequences and mouse reports. `stty` must be available.
+Other platforms use native console events. The Unix host checks for size changes
+at least every 250 ms while idle. The application and firmware runner have no
+threads. Rendering uses painter sorting to save RAM; intersecting surfaces can
+have approximate visibility. STL export uses the core's full 64-segment geometry
+and refuses meshes with omitted-body warnings.
+
+## ESP32 terminal
+
+The firmware runs the same compact program with an 160 × 60-cell terminal limit,
+a new part at startup and 32 KiB of file contents in RAM. Save/Open work during
+that session; reset loses the files. USB serial is the entire terminal byte
+stream, including keys and mouse. Disable local echo in the terminal emulator.
+No board is required for `sc98-term-app` above.
+
+Build from the repository root with a stable Rust toolchain and its target:
+
+```sh
+rustup target add riscv32imc-unknown-none-elf
+cargo build --manifest-path rust/Cargo.toml --release -p sc98-esp32 --target riscv32imc-unknown-none-elf
+```
+
+The default chip feature is `esp32c3`. Choose exactly one chip. For another
+chip, use `--no-default-features --features <chip>`:
+
+| Feature | Rust target | Terminal connection |
+|---|---|---|
+| `esp32c3` (default) | `riscv32imc-unknown-none-elf` | Native USB Serial/JTAG |
+| `esp32c6` | `riscv32imac-unknown-none-elf` | Native USB Serial/JTAG |
+| `esp32s3` | `xtensa-esp32s3-none-elf` | Native USB Serial/JTAG |
+| `esp32` | `xtensa-esp32-none-elf` | UART0, TX GPIO1 / RX GPIO3, 115200 baud |
+
+The Xtensa targets require Espressif's `esp` toolchain, installed separately
+with `espup`; those builds use `cargo +esp`. C6 requires its own standard
+Rust target. Do not enable all chip features in a firmware build. Chip variants
+are gated in the firmware entry point; host tests exercise the generic serial
+runner without touching hardware.
+
+When you have a matching C3 board, install `espflash`, connect its native USB
+port and flash the linked ELF (this writes the board):
+
+```sh
+espflash flash --chip esp32c3 rust/target/riscv32imc-unknown-none-elf/release/sc98-esp32
+```
+
+Use a raw serial terminal with ANSI/Unicode and mouse support on the resulting
+port, at 115200 for UART. Some boards expose only a USB-to-UART bridge, not
+the chip's native USB peripheral: C3/C6/S3 currently need the native USB port.
+Pin routing for other board layouts, reconnect handling, flash persistence,
+and large-model allocation recovery remain hardware work. This change does not
+flash a board. The fixed 300 KiB heap supports small parts; large samples and
+64-segment STL export can exceed a C3's available RAM. See
+[APP_REPORT.md](APP_REPORT.md) for verification and memory/linked-size results.
 
 ## Pixels: try it
 

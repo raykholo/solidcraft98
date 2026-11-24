@@ -38,6 +38,13 @@ jobs:
           {
             echo "### Embedded Edition on RISC-V (riscv32imc, opt-level z)"
             cargo build --locked -p sc98-core --release --no-default-features --target riscv32imc-unknown-none-elf
+            cargo build --locked -p sc98-esp32 --release --target riscv32imc-unknown-none-elf
+            cargo clippy --locked -p sc98-esp32 --bin sc98-esp32 --release --target riscv32imc-unknown-none-elf -- -D warnings
+            echo '- sc98-esp32 C3 linked image:'
+            echo '```'
+            stat -c '%s ELF bytes' target/riscv32imc-unknown-none-elf/release/sc98-esp32
+            size -A target/riscv32imc-unknown-none-elf/release/sc98-esp32
+            echo '```'
             echo "- sc98-core release archive: $(stat -c %s target/riscv32imc-unknown-none-elf/release/libsc98_core.rlib) bytes (includes Rust metadata)"
             cargo build --locked -p sc98-pixels --release --target riscv32imc-unknown-none-elf
             echo "- sc98-pixels release archive: $(stat -c %s target/riscv32imc-unknown-none-elf/release/libsc98_pixels.rlib) bytes (includes Rust metadata)"

@@ -73,9 +73,9 @@ control is in the Linux and Pi one too, but not yet in the Delphi Edition.
 | [Delphi Edition](delphi/) | Windows, ReactOS, Linux, Raspberry Pi | Object Pascal (Free Pascal and Lazarus) | `SolidCraft98-Delphi-1.2.zip` |
 | [Linux and Raspberry Pi](freebasic/) | Linux, and a Raspberry Pi from 2014 (ARMv6) | FreeBASIC, every pixel drawn by hand | `SolidCraft98-Linux-1.2.tar.gz` |
 
-The [Embedded Edition preview](rust/) adds the hand-drawn desktop at
-640 × 480 or 320 × 240, with a desktop demo and screenshots. Its drawing
-layer is ready for small screens; the core model connection is in progress.
+The [Embedded Edition](rust/) brings SolidCraft 98 to a terminal: sketch,
+extrude, revolve, drill, edit, save parts and export STL, with the classic
+640 × 480 desktop or a compact 320 × 240 screen.
 
 ## The book
 
